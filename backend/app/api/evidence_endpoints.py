@@ -130,6 +130,19 @@ async def verify_evidence(
 
 
 @router.get(
+    "/evidence/{evidence_id}/content",
+    tags=["Evidence"],
+)
+async def get_evidence_content(
+    evidence_id: str,
+    max_bytes: int = Query(default=65536, ge=1, le=1048576),
+    db: AsyncSession = Depends(get_db),
+):
+    """Retrieve raw text or hex inspection preview of an evidence artifact and log access."""
+    return await evidence_service.get_evidence_content(db, evidence_id, max_bytes=max_bytes)
+
+
+@router.get(
     "/cases/{case_id}/evidence/stats",
     tags=["Evidence"],
 )

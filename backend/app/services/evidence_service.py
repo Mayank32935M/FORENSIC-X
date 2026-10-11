@@ -255,3 +255,58 @@ async def get_evidence_stats(db: AsyncSession, case_id: str) -> dict:
         "total_size_bytes": total_size,
         "items_with_hash": sum(1 for e in items if e.hash_sha256),
     }
+
+
+async def get_evidence_content(db: AsyncSession, evidence_id: str, max_bytes: int = 65536) -> dict:
+    """Read content/preview of an evidence artifact and log custody access."""
+    evidence = await db.get(EvidenceItem, evidence_id)
+    if not evidence:
+        raise HTTPException(status_code=404, detail="Evidence item not found")
+
+    if not evidence.storage_path:
+        raise HTTPException(status_code=400, detail="No physical storage path recorded for this evidence item")
+
+    full_path = Path(settings.evidence_store_path).parent.parent / evidence.storage_path
+    if not full_path.is_file():
+        raise HTTPException(status_code=404, detail=f"File not found on disk at {evidence.storage_path}")
+
+    with open(full_path, "rb") as f:
+        raw_bytes = f.read(max_bytes)
+        is_truncated = f.read(1) != b""
+
+    # Log an ACCESSED record into chain of custody for forensic compliance
+    await append_custody_record(
+        db,
+        case_id=evidence.case_id,
+        action=CustodyAction.ACCESSED,
+        evidence_item_id=evidence.id,
+        actor="local-investigator",
+        description=f"Evidence artifact content previewed ({len(raw_bytes):,} bytes read)",
+    )
+
+    is_text = True
+    try:
+        text_content = raw_bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        is_text = False
+        text_content = None
+
+    # Construct hex dump for forensic binary inspection
+    hex_dump = []
+    for i in range(0, min(len(raw_bytes), 2048), 16):
+        chunk = raw_bytes[i:i + 16]
+        hex_str = " ".join(f"{b:02x}" for b in chunk)
+        ascii_str = "".join(chr(b) if 32 <= b <= 126 else "." for b in chunk)
+        hex_dump.append(f"{i:08x}  {hex_str:<48}  |{ascii_str}|")
+
+    return {
+        "evidence_id": evidence.id,
+        "filename": evidence.original_filename,
+        "mime_type": evidence.mime_type,
+        "file_size_bytes": evidence.file_size_bytes,
+        "hash_sha256": evidence.hash_sha256,
+        "is_text": is_text,
+        "is_truncated": is_truncated,
+        "content": text_content,
+        "hex_preview": "\n".join(hex_dump),
+    }

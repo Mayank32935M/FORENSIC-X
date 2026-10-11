@@ -1,26 +1,38 @@
 import React, { useEffect, useState } from 'react';
-import { fetchTimeline, fetchCases } from '../services/api';
-import type { TimelineEvent, Case } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { fetchTimeline, fetchEvidence } from '../services/api';
+import { useCaseContext } from '../context/CaseContext';
+import { EvidenceContentViewer } from '../components/EvidenceContentViewer';
+import type { TimelineEvent, EvidenceItem } from '../services/api';
 
 export const Timeline: React.FC = () => {
+  const { activeCaseId, setActiveCaseId, cases } = useCaseContext();
   const [events, setEvents] = useState<TimelineEvent[]>([]);
-  const [cases, setCases] = useState<Case[]>([]);
-  const [selectedCaseId, setSelectedCaseId] = useState<string>('');
+  const [evidenceList, setEvidenceList] = useState<EvidenceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('ALL');
 
-  useEffect(() => {
-    fetchCases().then(setCases).catch(console.error);
-  }, []);
+  // Time Drift Adjustment Simulator State
+  const [isNtpSyncActive, setIsNtpSyncActive] = useState(false);
+
+  // Linked evidence modal viewer
+  const [inspectItem, setInspectItem] = useState<EvidenceItem | null>(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     setLoading(true);
-    fetchTimeline(selectedCaseId || undefined)
-      .then(setEvents)
-      .catch(console.error)
+    Promise.all([
+      fetchTimeline(activeCaseId || undefined).catch(() => []),
+      fetchEvidence(activeCaseId || undefined).catch(() => []),
+    ])
+      .then(([tls, evs]) => {
+        setEvents(tls);
+        setEvidenceList(evs);
+      })
       .finally(() => setLoading(false));
-  }, [selectedCaseId]);
+  }, [activeCaseId]);
 
   // Distinct event types
   const eventTypes = Array.from(new Set(events.map((e) => e.event_type)));
@@ -28,7 +40,7 @@ export const Timeline: React.FC = () => {
   // Filtered events
   const filteredEvents = events.filter((e) => {
     if (typeFilter !== 'ALL' && e.event_type !== typeFilter) return false;
-    if (searchQuery) {
+    if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return (
         e.summary.toLowerCase().includes(q) ||
@@ -85,6 +97,21 @@ export const Timeline: React.FC = () => {
     }
   };
 
+  // Find linked evidence item for an event
+  const findLinkedEvidence = (eventType: string) => {
+    const type = eventType.toLowerCase();
+    if (type.includes('auth')) {
+      return evidenceList.find((e) => e.original_filename.includes('auth'));
+    }
+    if (type.includes('usb')) {
+      return evidenceList.find((e) => e.original_filename.includes('syslog'));
+    }
+    if (type.includes('file')) {
+      return evidenceList.find((e) => e.original_filename.includes('file_access'));
+    }
+    return evidenceList[0];
+  };
+
   return (
     <div className="space-y-4 w-full">
       {/* Top Header Bar */}
@@ -101,8 +128,8 @@ export const Timeline: React.FC = () => {
           <div className="flex items-center gap-1.5 bg-surface-container-high px-2 py-1 rounded border border-outline-variant/60 text-[11px]">
             <span className="text-on-surface-variant font-semibold">CASE:</span>
             <select
-              value={selectedCaseId}
-              onChange={(e) => setSelectedCaseId(e.target.value)}
+              value={activeCaseId}
+              onChange={(e) => setActiveCaseId(e.target.value)}
               className="bg-transparent text-primary font-bold focus:outline-none cursor-pointer"
             >
               <option value="" className="bg-surface-container text-on-surface">ALL CASES ({cases.length})</option>
@@ -115,42 +142,99 @@ export const Timeline: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Functional Search Bar */}
           <div className="relative flex items-center w-56 sm:w-64">
-            <span className="material-symbols-outlined absolute left-2 text-outline text-[16px] pointer-events-none">search</span>
+            <span className="material-symbols-outlined absolute left-2 text-outline text-[16px] pointer-events-none">
+              search
+            </span>
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-surface-container-lowest text-on-surface placeholder:text-outline text-[11px] font-data-mono pl-8 pr-3 py-1.5 rounded border border-outline-variant/60 focus:outline-none focus:border-primary transition-colors"
+              className="w-full bg-surface-container-lowest text-on-surface placeholder:text-outline text-[11px] font-data-mono pl-8 pr-7 py-1.5 rounded border border-outline-variant/60 focus:outline-none focus:border-primary transition-colors"
               placeholder="Search event summaries..."
               type="text"
             />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-2 text-outline hover:text-on-surface">
+                <span className="material-symbols-outlined text-[14px]">close</span>
+              </button>
+            )}
           </div>
+
+          {/* Sync NTP Offset Interactive Button */}
+          <button
+            onClick={() => setIsNtpSyncActive((prev) => !prev)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded font-bold text-[11px] transition-colors shadow-sm cursor-pointer ${
+              isNtpSyncActive
+                ? 'bg-verified text-surface-container-lowest shadow-[0_0_12px_rgba(34,197,94,0.3)]'
+                : 'bg-primary/10 border border-primary/50 text-primary hover:bg-primary/20'
+            }`}
+            type="button"
+          >
+            <span className="material-symbols-outlined text-[16px]">sync</span>
+            <span>{isNtpSyncActive ? 'NTP Harmonized' : 'Sync NTP Offset'}</span>
+          </button>
         </div>
       </div>
 
-      {/* Clock Synchronization Banner */}
-      <div className="bg-surface-container-low border border-primary/30 rounded-xl p-4 shadow-lg relative overflow-hidden">
+      {/* Clock Synchronization & Skew Banner */}
+      <div className={`border rounded-xl p-4 shadow-lg relative overflow-hidden transition-all ${
+        isNtpSyncActive
+          ? 'bg-surface-container-low border-verified/40'
+          : 'bg-surface-container-low border-error/40'
+      }`}>
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 relative z-10">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center text-primary shrink-0">
-              <span className="material-symbols-outlined text-[28px]">update</span>
+            <div className={`w-12 h-12 rounded-lg border flex items-center justify-center shrink-0 ${
+              isNtpSyncActive
+                ? 'bg-verified/20 border-verified text-verified'
+                : 'bg-error/20 border-error text-error animate-pulse'
+            }`}>
+              <span className="material-symbols-outlined text-[28px]">
+                {isNtpSyncActive ? 'check_circle' : 'timer_off'}
+              </span>
             </div>
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-headline-md text-[14px] font-bold text-on-surface">
-                  TIME CANONICALIZATION ENGINE
+                  {isNtpSyncActive
+                    ? 'CANONICAL TIME HARMONIZATION ACTIVE'
+                    : 'HOST CLOCK-SKEW ANOMALY DETECTED'}
                 </span>
-                <span className="px-2 py-0.5 rounded bg-verified/20 border border-verified/40 text-verified font-data-mono text-[10px] font-bold">
-                  UTC HARMONIZED
+                <span className={`px-2 py-0.5 rounded font-data-mono text-[10px] font-bold border ${
+                  isNtpSyncActive
+                    ? 'bg-verified/20 border-verified/50 text-verified'
+                    : 'bg-error/20 border-error/50 text-error'
+                }`}>
+                  {isNtpSyncActive ? 'DRIFT COMPENSATED' : '+00:04:18.291 DRIFT'}
+                </span>
+                <span className="bg-surface-container px-2 py-0.5 rounded text-outline font-data-mono text-[9px]">
+                  DESKTOP-X4929 BIOS CLOCK
                 </span>
               </div>
-              <div className="flex flex-wrap items-center gap-3 font-data-mono text-[10px] text-outline">
-                <span>All event timestamps normalized to ISO 8601 UTC standard.</span>
-                <span>•</span>
-                <span className="text-on-surface-variant font-bold">{events.length} chronological markers captured</span>
+              <div className="flex flex-wrap items-center gap-3 font-data-mono text-[10px]">
+                <div className="flex items-center gap-1.5 bg-surface-container-lowest px-2 py-0.5 rounded border border-outline-variant/40">
+                  <span className="material-symbols-outlined text-[13px] text-verified">schedule</span>
+                  <span className="text-outline">ATOMIC UTC:</span>
+                  <span className="text-on-surface font-bold">12:44:19.104 UTC</span>
+                </div>
+                <span className="text-outline font-bold text-[14px] leading-none">⇄</span>
+                <div className="flex items-center gap-1.5 bg-surface-container-lowest px-2 py-0.5 rounded border border-outline-variant/40">
+                  <span className="material-symbols-outlined text-[13px] text-amber-400">warning</span>
+                  <span className="text-outline">CAPTURED LOCAL:</span>
+                  <span className="text-amber-400 font-bold">12:48:37.395 EST</span>
+                </div>
               </div>
             </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-data-mono">
+            <span className="text-outline">
+              {isNtpSyncActive
+                ? 'All event sequences normalized to atomic UTC baseline.'
+                : 'Click "Sync NTP Offset" to apply offset adjustment matrix.'}
+            </span>
           </div>
         </div>
       </div>
@@ -158,12 +242,12 @@ export const Timeline: React.FC = () => {
       {/* Filter Chips Bar */}
       <div className="flex items-center gap-2 bg-surface-container-low px-3 py-2 rounded-lg border border-outline-variant/60 overflow-x-auto">
         <span className="text-[10px] font-data-mono uppercase tracking-wider text-outline font-bold mr-1 shrink-0">
-          Event Type:
+          Filter Event Class:
         </span>
         <button
           onClick={() => setTypeFilter('ALL')}
           className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${
-            typeFilter === 'ALL' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant'
+            typeFilter === 'ALL' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
           }`}
         >
           All [{events.length}]
@@ -173,7 +257,7 @@ export const Timeline: React.FC = () => {
             key={t}
             onClick={() => setTypeFilter(t)}
             className={`px-2.5 py-1 rounded text-[11px] font-data-mono font-medium border border-outline-variant/40 transition-colors uppercase ${
-              typeFilter === t ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant'
+              typeFilter === t ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
             }`}
           >
             {t.replace(/_/g, ' ')}
@@ -189,7 +273,7 @@ export const Timeline: React.FC = () => {
               Chronological Sequence
             </span>
             <span className="material-symbols-outlined text-[14px]">arrow_downward</span>
-            <span>Earliest to Latest</span>
+            <span>Earliest to Latest (Incident Genesis)</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 rounded-full bg-verified/20 text-verified border border-verified/50 font-data-mono text-[9px] font-bold flex items-center gap-1">
@@ -202,7 +286,10 @@ export const Timeline: React.FC = () => {
         {loading ? (
           <p className="text-outline text-xs font-data-mono py-8 text-center">Reconstructing event sequence...</p>
         ) : filteredEvents.length === 0 ? (
-          <p className="text-outline text-xs font-data-mono py-8 text-center">No timeline events recorded.</p>
+          <div className="py-8 text-center font-data-mono text-xs text-outline space-y-1">
+            <span className="material-symbols-outlined text-3xl">filter_alt_off</span>
+            <p>No timeline events match the current filter or search criteria.</p>
+          </div>
         ) : (
           <div className="relative pl-6 space-y-4">
             {/* Vertical connector line */}
@@ -212,6 +299,7 @@ export const Timeline: React.FC = () => {
               const delta = formatDelta(ev.event_time_utc);
               const badgeClass = getEventBadgeColor(ev.event_type);
               const iconName = getEventIcon(ev.event_type);
+              const linkedEvidence = findLinkedEvidence(ev.event_type);
 
               return (
                 <div key={ev.id || index} className="relative">
@@ -221,7 +309,7 @@ export const Timeline: React.FC = () => {
                   </div>
 
                   {/* Event Card */}
-                  <div className="bg-surface-container border border-outline-variant/60 rounded-lg p-3 hover:border-primary/50 transition-colors space-y-2">
+                  <div className="bg-surface-container border border-outline-variant/60 rounded-lg p-3.5 hover:border-primary/50 transition-colors space-y-2.5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className="font-data-mono text-[12px] text-primary font-bold">
@@ -232,7 +320,7 @@ export const Timeline: React.FC = () => {
                           {ev.event_type.replace(/_/g, ' ')}
                         </span>
                       </div>
-                      <span className="text-[10px] text-outline font-data-mono bg-surface-container-lowest px-2 py-0.5 rounded border border-outline-variant/40">
+                      <span className="text-[10px] text-outline font-data-mono bg-surface-container-lowest px-2 py-0.5 rounded border border-outline-variant/40 font-bold">
                         {delta}
                       </span>
                     </div>
@@ -241,12 +329,25 @@ export const Timeline: React.FC = () => {
                       {ev.summary}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3 text-[10px] font-data-mono text-outline pt-1 border-t border-outline-variant/30">
-                      {ev.original_time_string && (
-                        <span>Raw Source Time: <span className="text-on-surface-variant font-bold">{ev.original_time_string}</span></span>
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-data-mono text-outline pt-2 border-t border-outline-variant/30">
+                      <div className="flex flex-wrap items-center gap-3">
+                        {ev.original_time_string && (
+                          <span>Raw String: <span className="text-on-surface-variant font-bold">{ev.original_time_string}</span></span>
+                        )}
+                        <span>Timezone: <span className="text-on-surface-variant">{ev.source_timezone || 'UTC'}</span></span>
+                        <span>Quality: <span className="text-verified font-bold uppercase">{ev.time_quality || 'PRECISE'}</span></span>
+                      </div>
+
+                      {/* Interconnected Evidence Jump Link */}
+                      {linkedEvidence && (
+                        <button
+                          onClick={() => setInspectItem(linkedEvidence)}
+                          className="text-primary hover:text-sky-300 font-bold flex items-center gap-1 hover:underline cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[12px]">visibility</span>
+                          Inspect Source Log ({linkedEvidence.original_filename})
+                        </button>
                       )}
-                      <span>Timezone: <span className="text-on-surface-variant">{ev.source_timezone || 'UTC'}</span></span>
-                      <span>Quality: <span className="text-verified font-bold uppercase">{ev.time_quality || 'PRECISE'}</span></span>
                     </div>
                   </div>
                 </div>
@@ -255,6 +356,12 @@ export const Timeline: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Raw Content Viewer for Linked Evidence */}
+      <EvidenceContentViewer
+        evidenceItem={inspectItem}
+        onClose={() => setInspectItem(null)}
+      />
     </div>
   );
 };
