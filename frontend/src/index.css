@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body { margin: 0; padding: 0; }
+  body { overscroll-behavior: none; }
+  main > :first-child { margin-top: 0 !important; }
+  main > :last-child { margin-bottom: 0 !important; }
+}
+
+::-webkit-scrollbar { display: none; }
+
+@keyframes pulse-flow {
+  0% { transform: translateX(-100%); opacity: 0; }
+  30% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translateX(260%); opacity: 0; }
+}
+
+.pipeline-packet {
+  animation: pulse-flow 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.pipeline-packet-delayed {
+  animation: pulse-flow 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite 0.8s;
+}
+.pipeline-packet-delayed-2 {
+  animation: pulse-flow 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite 1.6s;
+}

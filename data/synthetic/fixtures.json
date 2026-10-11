@@ -1,0 +1,47 @@
+{
+  "scenario": "The Phantom Exfiltration",
+  "version": "1.0",
+  "fixtures": [
+    {
+      "type": "Case",
+      "data": {
+        "id": "e4f8d687-7a2e-4b68-80df-9c04df4a754b",
+        "case_number": "INS-2026-0042",
+        "title": "Unauthorized Access to HR System",
+        "description": "Investigating potential data exfiltration by exiting employee Alice. Target: algo_v2.py.",
+        "status": "OPEN",
+        "created_by": "local-investigator"
+      }
+    },
+    {
+      "type": "Device",
+      "data": {
+        "id": "dev-001",
+        "case_id": "e4f8d687-7a2e-4b68-80df-9c04df4a754b",
+        "name": "Alice-WKS-01",
+        "device_type": "laptop",
+        "os_info": "Windows 11 Enterprise"
+      }
+    },
+    {
+      "type": "Device",
+      "data": {
+        "id": "dev-002",
+        "case_id": "e4f8d687-7a2e-4b68-80df-9c04df4a754b",
+        "name": "Unknown USB Drive",
+        "device_type": "usb",
+        "serial_number": "USB-998877"
+      }
+    },
+    {
+      "type": "EvidenceItem",
+      "data": {
+        "id": "ev-001",
+        "case_id": "e4f8d687-7a2e-4b68-80df-9c04df4a754b",
+        "original_filename": "syslog_snippet.log",
+        "mime_type": "text/plain",
+        "source_description": "Extracted from Alice-WKS-01 C:\\Windows\\System32\\winevt\\Logs\\"
+      }
+    }
+  ]
+}

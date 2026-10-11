@@ -1,0 +1,55 @@
+# ==========================================
+# FORENSIC-X .gitignore
+# ==========================================
+
+# ----- Environment & Secrets -----
+.env
+.env.local
+.env.*.local
+
+# ----- Python -----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+*.db
+*.sqlite3
+
+# ----- Node / Frontend -----
+node_modules/
+frontend/dist/
+frontend/build/
+.vite/
+*.tsbuildinfo
+
+# ----- Evidence & Data (runtime, never committed) -----
+data/evidence_store/*
+!data/evidence_store/.gitkeep
+!data/evidence_store/README.md
+data/working/*
+!data/working/.gitkeep
+!data/working/README.md
+
+# ----- IDE -----
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ----- OS -----
+Desktop.ini
+ehthumbs.db

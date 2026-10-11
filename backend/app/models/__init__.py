@@ -1,0 +1,36 @@
+# Models package — re-export all models for easy importing
+from app.models.models import (
+    Case,
+    CaseStatus,
+    EvidenceItem,
+    ChainOfCustodyRecord,
+    CustodyAction,
+    AuditLogEntry,
+    EpistemicTier,
+    TimeQuality,
+    Device,
+    Account,
+    Observation,
+    Event,
+    Relationship,
+    Finding,
+    AIInterpretation,
+)
+
+__all__ = [
+    "Case",
+    "CaseStatus",
+    "EvidenceItem",
+    "ChainOfCustodyRecord",
+    "CustodyAction",
+    "AuditLogEntry",
+    "EpistemicTier",
+    "TimeQuality",
+    "Device",
+    "Account",
+    "Observation",
+    "Event",
+    "Relationship",
+    "Finding",
+    "AIInterpretation",
+]
