@@ -63,6 +63,85 @@ export interface EvidenceVerifyResponse {
   message: string;
 }
 
+export interface EvidenceContentResponse {
+  evidence_id: string;
+  filename: string;
+  mime_type: string | null;
+  file_size_bytes: number | null;
+  hash_sha256: string | null;
+  is_text: boolean;
+  is_truncated: boolean;
+  content: string | null;
+  hex_preview: string;
+}
+
+export interface CaseAuditHashResponse {
+  case_id: string;
+  case_number: string;
+  interim_audit_hash: string;
+  evidence_count: number;
+  custody_ledger_height: number;
+  algorithm: string;
+}
+
+export interface CaseExportResponse {
+  export_standard: string;
+  exported_at: string;
+  case: Case;
+  evidence_manifest: Array<{
+    id: string;
+    original_filename: string;
+    file_size_bytes: number | null;
+    mime_type: string | null;
+    hash_sha256: string | null;
+    hash_algorithm: string;
+    acquisition_method: string | null;
+    source_description: string | null;
+    storage_path: string | null;
+  }>;
+  chain_of_custody_ledger: Array<{
+    id: string;
+    action: string;
+    actor: string;
+    timestamp: string;
+    description: string | null;
+    prior_record_hash: string | null;
+    evidence_item_id: string | null;
+  }>;
+  reconstructed_timeline: Array<{
+    id: string;
+    event_type: string;
+    summary: string;
+    event_time_utc: string;
+    original_time_string: string | null;
+    source_timezone: string | null;
+    time_quality: string | null;
+  }>;
+}
+
+export interface GlobalSearchResponse {
+  query: string;
+  cases: Array<{
+    id: string;
+    case_number: string;
+    title: string;
+    status: string;
+  }>;
+  evidence: Array<{
+    id: string;
+    case_id: string;
+    original_filename: string;
+    hash_sha256: string | null;
+  }>;
+  events: Array<{
+    id: string;
+    case_id: string;
+    summary: string;
+    event_type: string;
+    time: string;
+  }>;
+}
+
 export interface TimelineEvent {
   id: string;
   case_id: string;
@@ -105,6 +184,18 @@ export const createCase = async (data: { title: string; case_number: string; des
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Failed to create case");
+  return res.json();
+};
+
+export const fetchCaseAuditHash = async (caseId: string): Promise<CaseAuditHashResponse> => {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/audit-hash`);
+  if (!res.ok) throw new Error("Failed to compute case audit hash");
+  return res.json();
+};
+
+export const fetchCaseExport = async (caseId: string): Promise<CaseExportResponse> => {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/export`);
+  if (!res.ok) throw new Error("Failed to export case dossier");
   return res.json();
 };
 
@@ -157,6 +248,12 @@ export const verifyEvidence = async (evidenceId: string): Promise<EvidenceVerify
   return res.json();
 };
 
+export const fetchEvidenceContent = async (evidenceId: string, maxBytes: number = 65536): Promise<EvidenceContentResponse> => {
+  const res = await fetch(`${API_BASE}/evidence/${evidenceId}/content?max_bytes=${maxBytes}`);
+  if (!res.ok) throw new Error("Failed to retrieve evidence file content");
+  return res.json();
+};
+
 // ─── Chain of Custody API ───────────────────────────────────────────────────
 
 export const fetchCustody = async (caseId: string): Promise<CustodyRecord[]> => {
@@ -180,5 +277,13 @@ export const fetchTimeline = async (caseId?: string): Promise<TimelineEvent[]> =
   const url = caseId ? `${API_BASE}/cases/${caseId}/timeline` : `${API_BASE}/timeline`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch timeline events");
+  return res.json();
+};
+
+// ─── Global Search API ──────────────────────────────────────────────────────
+
+export const globalSearch = async (query: string): Promise<GlobalSearchResponse> => {
+  const res = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}`);
+  if (!res.ok) throw new Error("Global search request failed");
   return res.json();
 };

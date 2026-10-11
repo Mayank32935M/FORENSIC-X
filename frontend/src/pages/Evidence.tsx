@@ -1,35 +1,37 @@
 import React, { useEffect, useState } from 'react';
 import {
   fetchEvidence,
-  fetchCases,
   verifyEvidence,
   fetchCustody,
   verifyCustody,
   uploadEvidence,
   createEvidenceMetadata,
 } from '../services/api';
+import { useCaseContext } from '../context/CaseContext';
+import { EvidenceContentViewer } from '../components/EvidenceContentViewer';
 import type {
   EvidenceItem,
-  Case,
   CustodyRecord,
   EvidenceVerifyResponse,
   CustodyVerifyResponse,
 } from '../services/api';
 
 export const Evidence: React.FC = () => {
+  const { activeCaseId, setActiveCaseId, cases } = useCaseContext();
   const [evidenceList, setEvidenceList] = useState<EvidenceItem[]>([]);
-  const [cases, setCases] = useState<Case[]>([]);
-  const [selectedCaseId, setSelectedCaseId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [scopeFilter, setScopeFilter] = useState<'ALL' | 'LOGS' | 'CSV' | 'OTHER'>('ALL');
+  const [scopeFilter, setScopeFilter] = useState<'ALL' | 'LOGS' | 'CSV' | 'DISK'>('ALL');
 
-  // Verification state per item: evidenceId -> { verified: boolean, message: string }
+  // Verification state per item
   const [verificationMap, setVerificationMap] = useState<Record<string, EvidenceVerifyResponse>>({});
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
+  // Raw Content Inspector Modal state
+  const [inspectItem, setInspectItem] = useState<EvidenceItem | null>(null);
+
   // Custody modal state
-  const [activeItem, setActiveItem] = useState<EvidenceItem | null>(null);
+  const [activeCustodyItem, setActiveCustodyItem] = useState<EvidenceItem | null>(null);
   const [custodyRecords, setCustodyRecords] = useState<CustodyRecord[]>([]);
   const [custodyVerifyResult, setCustodyVerifyResult] = useState<CustodyVerifyResponse | null>(null);
   const [loadingCustody, setLoadingCustody] = useState(false);
@@ -45,16 +47,11 @@ export const Evidence: React.FC = () => {
   const [ingesting, setIngesting] = useState(false);
   const [ingestError, setIngestError] = useState('');
 
-  // Initial data load
   const loadData = async () => {
     setLoading(true);
     try {
-      const [evData, casesData] = await Promise.all([
-        fetchEvidence(selectedCaseId || undefined),
-        fetchCases(),
-      ]);
-      setEvidenceList(evData);
-      setCases(casesData);
+      const data = await fetchEvidence(activeCaseId || undefined);
+      setEvidenceList(data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -64,7 +61,7 @@ export const Evidence: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, [selectedCaseId]);
+  }, [activeCaseId]);
 
   // Handle Hash Verification
   const handleVerifyEvidence = async (item: EvidenceItem, e: React.MouseEvent) => {
@@ -90,8 +87,9 @@ export const Evidence: React.FC = () => {
   };
 
   // Open Custody Details
-  const handleOpenCustody = async (item: EvidenceItem) => {
-    setActiveItem(item);
+  const handleOpenCustody = async (item: EvidenceItem, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setActiveCustodyItem(item);
     setLoadingCustody(true);
     setCustodyVerifyResult(null);
     try {
@@ -99,7 +97,6 @@ export const Evidence: React.FC = () => {
         fetchCustody(item.case_id),
         verifyCustody(item.case_id, item.id),
       ]);
-      // Filter records for this item if applicable
       const itemRecords = records.filter(
         (r) => !r.evidence_item_id || r.evidence_item_id === item.id
       );
@@ -117,7 +114,7 @@ export const Evidence: React.FC = () => {
     e.preventDefault();
     setIngesting(true);
     setIngestError('');
-    const targetCaseId = selectedCaseId || cases[0]?.id;
+    const targetCaseId = activeCaseId || cases[0]?.id;
     if (!targetCaseId) {
       setIngestError('Please select or create a case first.');
       setIngesting(false);
@@ -164,7 +161,7 @@ export const Evidence: React.FC = () => {
 
     if (scopeFilter === 'LOGS') return item.mime_type?.includes('text') || item.original_filename.endsWith('.log');
     if (scopeFilter === 'CSV') return item.mime_type?.includes('csv') || item.original_filename.endsWith('.csv');
-    if (scopeFilter === 'OTHER') return !item.original_filename.endsWith('.log') && !item.original_filename.endsWith('.csv');
+    if (scopeFilter === 'DISK') return !item.original_filename.endsWith('.log') && !item.original_filename.endsWith('.csv');
 
     return true;
   });
@@ -182,12 +179,12 @@ export const Evidence: React.FC = () => {
           </div>
           <span className="text-outline text-[11px] hidden sm:inline">::</span>
           
-          {/* Case Selector */}
+          {/* Synchronized Case Selector */}
           <div className="flex items-center gap-1.5 bg-surface-container-high px-2 py-1 rounded border border-outline-variant/60 text-[11px]">
             <span className="text-on-surface-variant font-semibold">CASE:</span>
             <select
-              value={selectedCaseId}
-              onChange={(e) => setSelectedCaseId(e.target.value)}
+              value={activeCaseId}
+              onChange={(e) => setActiveCaseId(e.target.value)}
               className="bg-transparent text-primary font-bold focus:outline-none cursor-pointer"
             >
               <option value="" className="bg-surface-container text-on-surface">ALL CASES ({cases.length})</option>
@@ -201,8 +198,8 @@ export const Evidence: React.FC = () => {
 
           <div className="hidden md:flex items-center gap-1.5 bg-surface-container px-2 py-1 rounded border border-outline-variant/50 text-[11px]">
             <span className="w-1.5 h-1.5 rounded-full bg-verified shadow-[0_0_6px_#22c55e]"></span>
-            <span className="text-on-surface-variant">CHAIN PROTOCOL:</span>
-            <span className="text-verified font-bold">SHA-256 IMMUTABLE</span>
+            <span className="text-on-surface-variant">LEDGER HEIGHT:</span>
+            <span className="text-verified font-bold">#{evidenceList.length} IMMUTABLE</span>
           </div>
         </div>
 
@@ -212,10 +209,15 @@ export const Evidence: React.FC = () => {
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-surface-container-lowest text-on-surface placeholder:text-outline text-[11px] font-data-mono pl-8 pr-3 py-1.5 rounded border border-outline-variant/60 focus:outline-none focus:border-primary transition-colors"
-              placeholder="Filter artifacts, hashes, names..."
+              className="w-full bg-surface-container-lowest text-on-surface placeholder:text-outline text-[11px] font-data-mono pl-8 pr-7 py-1.5 rounded border border-outline-variant/60 focus:outline-none focus:border-primary transition-colors"
+              placeholder="Search artifacts, SHA-256..."
               type="text"
             />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-2 text-outline hover:text-on-surface">
+                <span className="material-symbols-outlined text-[14px]">close</span>
+              </button>
+            )}
           </div>
           <button
             onClick={() => setShowIngestModal(true)}
@@ -247,7 +249,7 @@ export const Evidence: React.FC = () => {
               scopeFilter === 'LOGS' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
             }`}
           >
-            <span>Log Files</span>
+            <span>Kernel & Auth Logs</span>
           </button>
           <button
             onClick={() => setScopeFilter('CSV')}
@@ -255,33 +257,33 @@ export const Evidence: React.FC = () => {
               scopeFilter === 'CSV' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
             }`}
           >
-            <span>CSV Audits</span>
+            <span>CSV File Audits</span>
           </button>
           <button
-            onClick={() => setScopeFilter('OTHER')}
+            onClick={() => setScopeFilter('DISK')}
             className={`px-2.5 py-1 rounded text-[11px] font-medium flex items-center gap-1 border border-outline-variant/40 transition-colors ${
-              scopeFilter === 'OTHER' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
+              scopeFilter === 'DISK' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
             }`}
           >
-            <span>Other Media</span>
+            <span>Physical Bitstreams</span>
           </button>
         </div>
         <div className="flex items-center gap-2 shrink-0 text-[11px] font-data-mono">
           <span className="flex items-center gap-1 text-verified font-semibold">
             <span className="w-1.5 h-1.5 rounded-full bg-verified"></span>
-            {evidenceList.length} INTACT // READY FOR ANALYSIS
+            {evidenceList.length} ARTIFACTS // UNBROKEN HASH STATE
           </span>
         </div>
       </div>
 
       {/* Evidence Cards Grid */}
       {loading ? (
-        <div className="p-8 text-center text-outline font-data-mono text-sm">Loading evidence repository...</div>
+        <div className="p-8 text-center text-outline font-data-mono text-sm">Querying immutable evidence ledger...</div>
       ) : filteredEvidence.length === 0 ? (
         <div className="p-8 bg-surface-container-low rounded-xl border border-outline-variant text-center space-y-2">
           <span className="material-symbols-outlined text-4xl text-outline">search_off</span>
           <p className="text-on-surface font-semibold text-sm">No evidence artifacts matching current criteria.</p>
-          <p className="text-outline text-xs">Use "Ingest Artifact" above to upload or register synthetic evidence files.</p>
+          <p className="text-outline text-xs">Use "Ingest Artifact" above to upload or register forensic evidence files.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 items-start w-full">
@@ -294,8 +296,7 @@ export const Evidence: React.FC = () => {
             return (
               <div
                 key={item.id}
-                onClick={() => handleOpenCustody(item)}
-                className="cursor-pointer p-3 rounded-lg bg-surface-container-high border border-outline-variant/70 hover:border-primary/60 relative flex flex-col justify-between gap-3 shadow-md group transition-all"
+                className="p-3 rounded-lg bg-surface-container-high border border-outline-variant/70 hover:border-primary/60 relative flex flex-col justify-between gap-3 shadow-md group transition-all"
               >
                 {/* Header */}
                 <div className="flex items-start justify-between gap-1">
@@ -312,7 +313,7 @@ export const Evidence: React.FC = () => {
                           {isLog ? 'LOG' : isCsv ? 'CSV' : 'RAW'}
                         </span>
                       </div>
-                      <div className="text-[10px] text-outline font-data-mono mt-0.5 truncate max-w-[140px]">
+                      <div className="text-[10px] text-outline font-data-mono mt-0.5 truncate max-w-[130px]">
                         {item.acquisition_method || 'live-acquisition'}
                       </div>
                     </div>
@@ -348,49 +349,73 @@ export const Evidence: React.FC = () => {
                     <span>{item.mime_type || 'octet-stream'}</span>
                     <span>•</span>
                     <span className="text-on-surface-variant font-data-mono">
-                      {item.file_size_bytes ? `${item.file_size_bytes.toLocaleString()} bytes` : 'Metadata only'}
+                      {item.file_size_bytes ? `${item.file_size_bytes.toLocaleString()} B` : 'Metadata'}
                     </span>
                   </div>
                 </div>
 
                 {/* SHA-256 Fingerprint */}
                 <div className="space-y-1 bg-surface-container-lowest p-2 rounded border border-outline-variant/40 font-data-mono text-[10px]">
-                  <div className="text-outline text-[9px] uppercase tracking-wider">SHA-256 Fingerprint</div>
-                  <div className="text-primary truncate" title={item.hash_sha256 || 'None'}>
-                    {item.hash_sha256 ? `${item.hash_sha256.slice(0, 16)}...` : 'Not computed'}
+                  <div className="text-outline text-[9px] uppercase tracking-wider flex items-center justify-between">
+                    <span>SHA-256 Fingerprint</span>
+                    <span className="text-verified font-bold">CANONICAL</span>
+                  </div>
+                  <div className="text-primary truncate font-bold select-all" title={item.hash_sha256 || 'None'}>
+                    {item.hash_sha256 ? `${item.hash_sha256.slice(0, 18)}...` : 'Not computed'}
                   </div>
                 </div>
 
-                {/* Action Footer */}
-                <div className="flex items-center justify-between pt-2 border-t border-outline-variant/40 mt-1">
-                  <button
-                    onClick={(e) => handleVerifyEvidence(item, e)}
-                    disabled={isVerifying}
-                    className="px-2 py-1 bg-surface-container text-primary hover:bg-primary/20 border border-primary/40 rounded text-[10px] font-data-mono font-bold flex items-center gap-1 transition-colors"
-                    title="Run live SHA-256 hash check against disk"
-                  >
-                    <span className={`material-symbols-outlined text-[13px] ${isVerifying ? 'animate-spin' : ''}`}>
-                      {isVerifying ? 'sync' : 'fingerprint'}
-                    </span>
-                    <span>{isVerifying ? 'Hashing...' : 'Verify Hash'}</span>
-                  </button>
-
-                  {verification ? (
-                    <span
-                      className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase flex items-center gap-1 border ${
-                        verification.verified
-                          ? 'bg-verified/15 text-verified border-verified/40'
-                          : 'bg-error/15 text-error border-error/40'
-                      }`}
+                {/* Forensic Primary Action Buttons */}
+                <div className="space-y-2 pt-1 border-t border-outline-variant/40">
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* View Raw Content Button */}
+                    <button
+                      onClick={() => setInspectItem(item)}
+                      className="px-2 py-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/50 text-primary rounded text-[11px] font-data-mono font-bold flex items-center justify-center gap-1 transition-colors"
+                      title="Inspect raw log bitstream & hex representation"
                     >
-                      <span className={`w-1.5 h-1.5 rounded-full ${verification.verified ? 'bg-verified' : 'bg-error'}`}></span>
-                      {verification.verified ? 'VERIFIED' : 'TAMPERED'}
-                    </span>
-                  ) : (
-                    <span className="text-[10px] font-data-mono text-outline hover:text-primary transition-colors flex items-center gap-0.5">
-                      Custody Chain <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-                    </span>
-                  )}
+                      <span className="material-symbols-outlined text-[14px]">visibility</span>
+                      <span>Inspect</span>
+                    </button>
+
+                    {/* Verify Hash Button */}
+                    <button
+                      onClick={(e) => handleVerifyEvidence(item, e)}
+                      disabled={isVerifying}
+                      className="px-2 py-1.5 bg-surface-container hover:bg-surface-container-highest border border-outline-variant text-on-surface rounded text-[11px] font-data-mono font-semibold flex items-center justify-center gap-1 transition-colors"
+                      title="Calculate on-disk SHA-256 hash and verify against ledger"
+                    >
+                      <span className={`material-symbols-outlined text-[14px] text-primary ${isVerifying ? 'animate-spin' : ''}`}>
+                        {isVerifying ? 'sync' : 'fingerprint'}
+                      </span>
+                      <span>{isVerifying ? 'Hashing...' : 'Verify'}</span>
+                    </button>
+                  </div>
+
+                  {/* Verification result or custody link */}
+                  <div className="flex items-center justify-between text-[10px] font-data-mono pt-1 border-t border-outline-variant/30">
+                    {verification ? (
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase flex items-center gap-1 border ${
+                          verification.verified
+                            ? 'bg-verified/15 text-verified border-verified/40'
+                            : 'bg-error/15 text-error border-error/40'
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${verification.verified ? 'bg-verified' : 'bg-error'}`}></span>
+                        {verification.verified ? 'SHA-256 MATCH' : 'TAMPERED'}
+                      </span>
+                    ) : (
+                      <span className="text-outline text-[10px]">Unchecked</span>
+                    )}
+
+                    <button
+                      onClick={(e) => handleOpenCustody(item, e)}
+                      className="text-primary hover:text-sky-300 font-bold flex items-center gap-0.5"
+                    >
+                      Custody Chain <span className="material-symbols-outlined text-[13px]">chevron_right</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -398,8 +423,14 @@ export const Evidence: React.FC = () => {
         </div>
       )}
 
+      {/* Raw Content & Hex Inspector Modal */}
+      <EvidenceContentViewer
+        evidenceItem={inspectItem}
+        onClose={() => setInspectItem(null)}
+      />
+
       {/* Custody Chain & Integrity Modal */}
-      {activeItem && (
+      {activeCustodyItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="bg-surface-container-low border border-outline-variant rounded-xl max-w-2xl w-full p-5 space-y-4 shadow-2xl relative">
             <div className="flex items-start justify-between border-b border-outline-variant/60 pb-3">
@@ -411,11 +442,11 @@ export const Evidence: React.FC = () => {
                   </h3>
                 </div>
                 <div className="text-xs font-data-mono text-outline mt-1">
-                  Target: {activeItem.original_filename}
+                  Target: {activeCustodyItem.original_filename}
                 </div>
               </div>
               <button
-                onClick={() => setActiveItem(null)}
+                onClick={() => setActiveCustodyItem(null)}
                 className="text-outline hover:text-on-surface p-1 rounded-md"
               >
                 <span className="material-symbols-outlined text-[20px]">close</span>
@@ -426,20 +457,20 @@ export const Evidence: React.FC = () => {
             <div className="grid grid-cols-2 gap-3 bg-surface-container p-3 rounded-lg border border-outline-variant/60 font-data-mono text-xs">
               <div>
                 <span className="text-outline block text-[10px] uppercase">Storage Path:</span>
-                <span className="text-on-surface truncate block" title={activeItem.storage_path || ''}>
-                  {activeItem.storage_path || 'None (DB Record)'}
+                <span className="text-on-surface truncate block" title={activeCustodyItem.storage_path || ''}>
+                  {activeCustodyItem.storage_path || 'None (DB Record)'}
                 </span>
               </div>
               <div>
                 <span className="text-outline block text-[10px] uppercase">File Size:</span>
                 <span className="text-on-surface font-bold">
-                  {activeItem.file_size_bytes ? `${activeItem.file_size_bytes.toLocaleString()} bytes` : '0 B'}
+                  {activeCustodyItem.file_size_bytes ? `${activeCustodyItem.file_size_bytes.toLocaleString()} bytes` : '0 B'}
                 </span>
               </div>
               <div className="col-span-2">
                 <span className="text-outline block text-[10px] uppercase">Canonical SHA-256:</span>
                 <span className="text-primary font-bold text-[11px] break-all select-all">
-                  {activeItem.hash_sha256 || 'None'}
+                  {activeCustodyItem.hash_sha256 || 'None'}
                 </span>
               </div>
             </div>
@@ -507,7 +538,7 @@ export const Evidence: React.FC = () => {
 
             <div className="flex justify-end pt-2">
               <button
-                onClick={() => setActiveItem(null)}
+                onClick={() => setActiveCustodyItem(null)}
                 className="px-4 py-1.5 bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface rounded font-data-mono text-xs"
               >
                 Close Inspector
@@ -575,8 +606,8 @@ export const Evidence: React.FC = () => {
             <div className="space-y-1">
               <label className="text-[10px] font-data-mono text-outline uppercase font-bold">Target Case</label>
               <select
-                value={selectedCaseId}
-                onChange={(e) => setSelectedCaseId(e.target.value)}
+                value={activeCaseId}
+                onChange={(e) => setActiveCaseId(e.target.value)}
                 className="w-full bg-surface-container border border-outline-variant rounded p-2 text-xs font-data-mono text-on-surface focus:border-primary focus:outline-none"
               >
                 {cases.map((c) => (
@@ -632,17 +663,6 @@ export const Evidence: React.FC = () => {
                 rows={2}
                 className="w-full bg-surface-container border border-outline-variant rounded p-2 text-xs font-data-mono text-on-surface focus:border-primary focus:outline-none"
               ></textarea>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[10px] font-data-mono text-outline uppercase font-bold">Acquisition Method</label>
-              <input
-                type="text"
-                value={ingestMethod}
-                onChange={(e) => setIngestMethod(e.target.value)}
-                placeholder="e.g. live-acquisition, dd-bitstream, forensic-imager"
-                className="w-full bg-surface-container border border-outline-variant rounded p-2 text-xs font-data-mono text-on-surface focus:border-primary focus:outline-none"
-              />
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t border-outline-variant/60">
