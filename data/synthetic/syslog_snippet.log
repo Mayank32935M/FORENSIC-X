@@ -1,0 +1,14 @@
+Oct 10 08:15:03 Alice-WKS-01 kernel: [14423.881092] usb 2-1.3: new high-speed USB device number 5 using xhci_hcd
+Oct 10 08:15:03 Alice-WKS-01 kernel: [14423.982341] usb 2-1.3: New USB device found, idVendor=0781, idProduct=5583, bcdDevice= 1.00
+Oct 10 08:15:03 Alice-WKS-01 kernel: [14423.982350] usb 2-1.3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Oct 10 08:15:03 Alice-WKS-01 kernel: [14423.982355] usb 2-1.3: Product: Ultra USB 3.0
+Oct 10 08:15:03 Alice-WKS-01 kernel: [14423.982358] usb 2-1.3: Manufacturer: SanDisk
+Oct 10 08:15:03 Alice-WKS-01 kernel: [14423.982361] usb 2-1.3: SerialNumber: USB-998877
+Oct 10 08:15:04 Alice-WKS-01 kernel: [14424.015223] usb-storage 2-1.3:1.0: USB Mass Storage device detected
+Oct 10 08:15:04 Alice-WKS-01 kernel: [14424.015891] scsi host6: usb-storage 2-1.3:1.0
+Oct 10 08:15:05 Alice-WKS-01 kernel: [14425.018442] scsi 6:0:0:0: Direct-Access     SanDisk  Ultra USB 3.0     1.00 PQ: 0 ANSI: 6
+Oct 10 08:15:05 Alice-WKS-01 kernel: [14425.019101] sd 6:0:0:0: [sdb] 60062500 512-byte logical blocks: (30.8 GB/28.6 GiB)
+Oct 10 08:15:05 Alice-WKS-01 kernel: [14425.019892] sd 6:0:0:0: [sdb] Write Protect is off
+Oct 10 08:15:05 Alice-WKS-01 kernel: [14425.022103]  sdb: sdb1
+Oct 10 08:15:05 Alice-WKS-01 kernel: [14425.023551] sd 6:0:0:0: [sdb] Attached SCSI removable disk
+Oct 10 08:25:11 Alice-WKS-01 kernel: [15031.441221] usb 2-1.3: USB disconnect, device number 5

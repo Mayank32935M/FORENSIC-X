@@ -37,6 +37,7 @@ frontend/build/
 data/evidence_store/*
 !data/evidence_store/.gitkeep
 !data/evidence_store/README.md
+backend/data/
 data/working/*
 !data/working/.gitkeep
 !data/working/README.md

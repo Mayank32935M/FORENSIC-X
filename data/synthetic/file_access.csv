@@ -1,0 +1,5 @@
+timestamp_utc,user,action,file_path,source_host,destination,bytes_transferred,status
+2026-10-10T08:20:14Z,alice,READ,\\\\fileserver\\restricted\\R&D\\algo_v2.py,Alice-WKS-01,local,48230,SUCCESS
+2026-10-10T08:20:31Z,alice,READ,\\\\fileserver\\restricted\\R&D\\algo_v2.py,Alice-WKS-01,local,48230,SUCCESS
+2026-10-10T08:22:07Z,alice,COPY,\\\\fileserver\\restricted\\R&D\\algo_v2.py,Alice-WKS-01,E:\\exfil_backup\\,48230,SUCCESS
+2026-10-10T08:22:09Z,alice,WRITE,E:\\exfil_backup\\algo_v2.py,Alice-WKS-01,E:\\exfil_backup\\,48230,SUCCESS

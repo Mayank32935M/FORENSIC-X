@@ -16,6 +16,8 @@ from app.core.config import settings
 from app.core.logging import setup_logging, get_logger
 from app.core.errors import http_exception_handler, generic_exception_handler
 from app.api.endpoints import router as api_router
+from app.api.evidence_endpoints import router as evidence_router
+from app.api.timeline_endpoints import router as timeline_router
 
 setup_logging()
 logger = get_logger(__name__)
@@ -53,3 +55,5 @@ app.add_exception_handler(Exception, generic_exception_handler)
 
 # Routers
 app.include_router(api_router, prefix="/api")
+app.include_router(evidence_router, prefix="/api")
+app.include_router(timeline_router, prefix="/api")

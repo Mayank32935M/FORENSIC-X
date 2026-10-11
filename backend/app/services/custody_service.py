@@ -92,12 +92,26 @@ async def verify_chain(db: AsyncSession, case_id: str, evidence_item_id: str | N
     if not records:
         return True # Empty chain is valid
         
-    expected_prior_hash = None
-    for record in records:
-        if record.prior_record_hash != expected_prior_hash:
-            logger.error("chain_of_custody_broken", record_id=record.id, expected=expected_prior_hash, actual=record.prior_record_hash)
-            return False
+    if evidence_item_id:
+        expected_prior_hash = None
+        for record in records:
+            if record.prior_record_hash != expected_prior_hash:
+                logger.error("chain_of_custody_broken", record_id=record.id, expected=expected_prior_hash, actual=record.prior_record_hash)
+                return False
+            expected_prior_hash = _compute_hash(_serialize_record(record))
+        return True
+    else:
+        from collections import defaultdict
+        grouped = defaultdict(list)
+        for record in records:
+            grouped[record.evidence_item_id].append(record)
             
-        expected_prior_hash = _compute_hash(_serialize_record(record))
-        
-    return True
+        for ev_id, chain_records in grouped.items():
+            expected_prior_hash = None
+            for record in chain_records:
+                if record.prior_record_hash != expected_prior_hash:
+                    logger.error("chain_of_custody_broken", record_id=record.id, expected=expected_prior_hash, actual=record.prior_record_hash)
+                    return False
+                expected_prior_hash = _compute_hash(_serialize_record(record))
+        return True
+
