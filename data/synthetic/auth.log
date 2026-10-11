@@ -1,0 +1,4 @@
+Oct 10 08:00:12 Alice-WKS-01 sshd[2241]: Accepted password for alice from 10.0.1.55 port 52341 ssh2
+Oct 10 08:00:12 Alice-WKS-01 sshd[2241]: pam_unix(sshd:session): session opened for user alice(uid=1001) by (uid=0)
+Oct 10 08:00:13 Alice-WKS-01 systemd-logind[891]: New session 14 of user alice.
+Oct 10 08:00:14 Alice-WKS-01 kernel: [13502.113205] audit: type=1100 audit(1696924814.221:489): pid=2241 uid=0 auid=1001 ses=14 msg='op=PAM:authentication grantors=pam_unix acct="alice" exe="/usr/sbin/sshd" hostname=10.0.1.55 addr=10.0.1.55 terminal=ssh res=success'
