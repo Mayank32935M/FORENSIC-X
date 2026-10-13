@@ -213,11 +213,83 @@ export const CommandPalette: React.FC = () => {
                   </div>
                 </div>
               )}
+
+              {/* Observations Results */}
+              {results.observations && results.observations.length > 0 && (
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-sky-400 tracking-wider px-2 mb-1.5 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">manage_search</span>
+                    Extracted Observations ({results.observations.length})
+                  </div>
+                  <div className="space-y-1">
+                    {results.observations.map((obs) => (
+                      <div
+                        key={obs.id}
+                        onClick={() => {
+                          setActiveCaseId(obs.case_id);
+                          navigate('/evidence');
+                          setIsSearchOpen(false);
+                        }}
+                        className="cursor-pointer p-2 rounded bg-surface-container hover:bg-sky-500/10 border border-outline-variant/50 hover:border-sky-500/50 transition-colors flex items-center justify-between"
+                      >
+                        <div>
+                          <div className="text-on-surface font-semibold flex items-center gap-1.5">
+                            <span className="px-1 py-0.2 bg-primary/20 text-primary font-bold text-[9px] rounded">
+                              {obs.type}
+                            </span>
+                            <span className="truncate max-w-sm">{obs.content}</span>
+                          </div>
+                          <div className="text-[10px] text-outline">
+                            Source: {obs.source_file || 'Log'} • {obs.time || 'Timestamp recorded'}
+                          </div>
+                        </div>
+                        <span className="text-[10px] text-sky-400 font-bold flex items-center gap-0.5">
+                          Inspect <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Findings Results */}
+              {results.findings && results.findings.length > 0 && (
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-amber-400 tracking-wider px-2 mb-1.5 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">fact_check</span>
+                    Analytical Findings ({results.findings.length})
+                  </div>
+                  <div className="space-y-1">
+                    {results.findings.map((fnd) => (
+                      <div
+                        key={fnd.id}
+                        onClick={() => {
+                          setActiveCaseId(fnd.case_id);
+                          navigate('/findings');
+                          setIsSearchOpen(false);
+                        }}
+                        className="cursor-pointer p-2 rounded bg-surface-container hover:bg-amber-500/10 border border-outline-variant/50 hover:border-amber-500/50 transition-colors flex items-center justify-between"
+                      >
+                        <div>
+                          <div className="text-on-surface font-bold">{fnd.title}</div>
+                          <div className="text-[10px] text-outline flex items-center gap-2">
+                            <span className="text-amber-400 uppercase font-semibold">Tier: {fnd.tier}</span>
+                            {fnd.confidence !== null && <span>Certainty: {Math.round(fnd.confidence * 100)}%</span>}
+                          </div>
+                        </div>
+                        <span className="text-[10px] text-amber-400 font-bold flex items-center gap-0.5">
+                          Examine <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="py-8 text-center text-outline">
               <span className="material-symbols-outlined text-3xl mb-1">search_off</span>
-              <p>No matching forensic artifacts, hashes, or events found.</p>
+              <p>No matching forensic artifacts, hashes, observations, or events found.</p>
             </div>
           )}
         </div>

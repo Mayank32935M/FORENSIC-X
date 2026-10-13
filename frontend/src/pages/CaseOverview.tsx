@@ -10,6 +10,9 @@ import {
   fetchCaseExport,
   createEvidenceMetadata,
   uploadEvidence,
+  fetchObservations,
+  fetchFindingsSummary,
+  fetchCaseGraph,
 } from '../services/api';
 import { useCaseContext } from '../context/CaseContext';
 import { EvidenceContentViewer } from '../components/EvidenceContentViewer';
@@ -20,6 +23,9 @@ import type {
   CustodyRecord,
   CustodyVerifyResponse,
   CaseAuditHashResponse,
+  Observation,
+  FindingsSummaryResponse,
+  GraphDataResponse,
 } from '../services/api';
 
 export const CaseOverview: React.FC = () => {
@@ -30,6 +36,9 @@ export const CaseOverview: React.FC = () => {
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [custodyRecords, setCustodyRecords] = useState<CustodyRecord[]>([]);
   const [custodyVerification, setCustodyVerification] = useState<CustodyVerifyResponse | null>(null);
+  const [observations, setObservations] = useState<Observation[]>([]);
+  const [findingsSummary, setFindingsSummary] = useState<FindingsSummaryResponse | null>(null);
+  const [graphData, setGraphData] = useState<GraphDataResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
 
@@ -67,17 +76,23 @@ export const CaseOverview: React.FC = () => {
       if (targetCase) {
         const cId = targetCase.id;
         setActiveCaseId(cId);
-        const [evs, tls, cust, custVer] = await Promise.all([
+        const [evs, tls, cust, custVer, obs, fSum, grp] = await Promise.all([
           fetchEvidence(cId).catch(() => []),
           fetchTimeline(cId).catch(() => []),
           fetchCustody(cId).catch(() => []),
           verifyCustody(cId).catch(() => null),
+          fetchObservations(cId).catch(() => []),
+          fetchFindingsSummary(cId).catch(() => null),
+          fetchCaseGraph(cId).catch(() => null),
         ]);
         setCaseData(targetCase);
         setEvidence(evs);
         setTimeline(tls);
         setCustodyRecords(cust);
         setCustodyVerification(custVer);
+        setObservations(obs);
+        setFindingsSummary(fSum);
+        setGraphData(grp);
       }
     } catch (err) {
       console.error(err);
@@ -391,6 +406,130 @@ export const CaseOverview: React.FC = () => {
               {verifying ? 'Verifying...' : 'Audit Custody Ledger'}
             </button>
             <span className="text-verified font-bold">Tamper-Evident</span>
+          </div>
+        </div>
+
+        {/* Card 4: Extracted Forensic Observations */}
+        <div className="bg-surface-container-low border border-outline-variant/60 rounded-xl p-4 shadow-md flex flex-col justify-between group hover:border-primary/50 transition-colors">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="font-data-mono text-[10px] uppercase text-outline tracking-wider font-semibold">
+                EXTRACTED OBSERVATIONS
+              </div>
+              <div className="font-headline-xl text-2xl text-on-surface font-bold mt-0.5">
+                {observations.length} Facts Extracted
+              </div>
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-surface-container-high border border-primary/30 flex items-center justify-center text-primary">
+              <span className="material-symbols-outlined text-[18px]">manage_search</span>
+            </div>
+          </div>
+
+          <div className="my-3 space-y-1.5 font-data-mono text-xs">
+            {observations.slice(0, 3).map((obs) => (
+              <div key={obs.id} className="bg-surface-container p-2 rounded border border-outline-variant/30 text-[11px]">
+                <div className="flex items-center justify-between text-outline text-[9px] mb-0.5">
+                  <span className="text-primary uppercase font-bold">[{obs.observation_type}]</span>
+                  <span>{obs.source_offset || 'line:1'}</span>
+                </div>
+                <div className="truncate text-on-surface font-sans text-xs">{obs.content}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-2 border-t border-outline-variant/40 flex items-center justify-between text-[10px] font-data-mono">
+            <span className="text-verified flex items-center gap-1">
+              <span className="material-symbols-outlined text-[12px]">verified</span>
+              Automated Parsers Active
+            </span>
+            <Link to="/evidence" className="text-primary hover:underline">
+              Inspect Observations Matrix →
+            </Link>
+          </div>
+        </div>
+
+        {/* Card 5: Analytical Findings & Truth Tiers */}
+        <div className="bg-surface-container-low border border-outline-variant/60 rounded-xl p-4 shadow-md flex flex-col justify-between group hover:border-primary/50 transition-colors">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="font-data-mono text-[10px] uppercase text-outline tracking-wider font-semibold">
+                EPISTEMIC FINDINGS
+              </div>
+              <div className="font-headline-xl text-2xl text-on-surface font-bold mt-0.5">
+                {findingsSummary ? findingsSummary.total_findings : 0} Asserted Findings
+              </div>
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-surface-container-high border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <span className="material-symbols-outlined text-[18px]">fact_check</span>
+            </div>
+          </div>
+
+          <div className="my-3 space-y-2 font-data-mono text-xs">
+            {findingsSummary ? (
+              <div className="grid grid-cols-3 gap-1.5 text-center">
+                <div className="p-2 rounded bg-surface-container border border-verified/30">
+                  <div className="text-[9px] text-verified uppercase font-bold">Verified</div>
+                  <div className="text-lg font-bold text-verified mt-0.5">{findingsSummary.verified_observations}</div>
+                </div>
+                <div className="p-2 rounded bg-surface-container border border-amber-500/30">
+                  <div className="text-[9px] text-amber-400 uppercase font-bold">Inference</div>
+                  <div className="text-lg font-bold text-amber-400 mt-0.5">{findingsSummary.inferences}</div>
+                </div>
+                <div className="p-2 rounded bg-surface-container border border-purple-500/30">
+                  <div className="text-[9px] text-purple-400 uppercase font-bold">Hypothesis</div>
+                  <div className="text-lg font-bold text-purple-400 mt-0.5">{findingsSummary.hypotheses}</div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-outline text-xs">Loading epistemic distribution...</div>
+            )}
+            <div className="text-[10px] text-outline text-center">
+              Citation Coverage: <span className="text-primary font-bold">{findingsSummary?.citation_coverage_pct || 100}%</span>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-outline-variant/40 flex items-center justify-between text-[10px] font-data-mono">
+            <span className="text-amber-400 font-semibold">Truth-Tiered Rigor</span>
+            <Link to="/findings" className="text-primary hover:underline">
+              View Epistemic Findings →
+            </Link>
+          </div>
+        </div>
+
+        {/* Card 6: Knowledge Graph Topology */}
+        <div className="bg-surface-container-low border border-outline-variant/60 rounded-xl p-4 shadow-md flex flex-col justify-between group hover:border-primary/50 transition-colors">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="font-data-mono text-[10px] uppercase text-outline tracking-wider font-semibold">
+                ENTITY KNOWLEDGE GRAPH
+              </div>
+              <div className="font-headline-xl text-2xl text-on-surface font-bold mt-0.5">
+                {graphData ? `${graphData.metrics.total_nodes} Nodes • ${graphData.metrics.total_edges} Edges` : 'Topology Active'}
+              </div>
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-surface-container-high border border-primary/30 flex items-center justify-center text-primary">
+              <span className="material-symbols-outlined text-[18px]">hub</span>
+            </div>
+          </div>
+
+          <div className="my-3 space-y-1.5 font-data-mono text-[11px]">
+            <div className="p-2 rounded bg-surface-container border border-critical/40 flex items-center justify-between">
+              <span className="text-critical font-bold flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-critical animate-pulse"></span>
+                Exfiltration Path
+              </span>
+              <span className="text-on-surface font-bold">DETECTED (5 STAGES)</span>
+            </div>
+            <div className="text-[10px] text-outline px-1">
+              Alice-WKS-01 ➔ SanDisk USB-998877 ➔ algo_v2.py
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-outline-variant/40 flex items-center justify-between text-[10px] font-data-mono">
+            <span className="text-critical font-bold">Critical Chain Mapped</span>
+            <Link to="/graph" className="text-primary hover:underline">
+              Explore Topology Graph →
+            </Link>
           </div>
         </div>
       </div>

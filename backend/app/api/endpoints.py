@@ -120,6 +120,22 @@ async def export_case_package(case_id: str, db: AsyncSession = Depends(get_db)):
     tl_res = await db.execute(tl_stmt)
     timeline_events = list(tl_res.scalars().all())
 
+    # Get observations
+    from app.models.models import Observation, Finding, Relationship
+    obs_stmt = select(Observation).where(Observation.case_id == case_id).order_by(Observation.observed_time_utc.asc().nullslast())
+    obs_res = await db.execute(obs_stmt)
+    observations = list(obs_res.scalars().all())
+
+    # Get findings
+    find_stmt = select(Finding).where(Finding.case_id == case_id).order_by(Finding.created_at.desc())
+    find_res = await db.execute(find_stmt)
+    findings = list(find_res.scalars().all())
+
+    # Get relationships
+    rel_stmt = select(Relationship).where(Relationship.case_id == case_id)
+    rel_res = await db.execute(rel_stmt)
+    relationships = list(rel_res.scalars().all())
+
     return {
         "export_standard": "FORENSIC-X-VERIFIABLE-DOSSIER-V1",
         "exported_at": datetime.now(timezone.utc).isoformat(),
@@ -170,17 +186,51 @@ async def export_case_package(case_id: str, db: AsyncSession = Depends(get_db)):
             }
             for t in timeline_events
         ],
+        "extracted_observations": [
+            {
+                "id": o.id,
+                "evidence_item_id": o.evidence_item_id,
+                "observation_type": o.observation_type,
+                "content": o.content,
+                "source_file": o.source_file,
+                "source_offset": o.source_offset,
+                "observed_time_utc": o.observed_time_utc.isoformat() if o.observed_time_utc else None,
+            }
+            for o in observations
+        ],
+        "analytical_findings": [
+            {
+                "id": f.id,
+                "title": f.title,
+                "description": f.description,
+                "epistemic_tier": f.epistemic_tier.value,
+                "confidence_score": f.confidence_score,
+                "reasoning": f.reasoning,
+            }
+            for f in findings
+        ],
+        "entity_relationships": [
+            {
+                "id": r.id,
+                "source_type": r.source_entity_type,
+                "source_id": r.source_entity_id,
+                "target_type": r.target_entity_type,
+                "target_id": r.target_entity_id,
+                "relationship_type": r.relationship_type,
+            }
+            for r in relationships
+        ],
     }
 
 
 @router.get("/search", tags=["Search"])
 async def global_search(q: str, db: AsyncSession = Depends(get_db)):
-    """Global search across cases, evidence artifacts, and timeline events."""
+    """Global search across cases, evidence artifacts, timeline events, observations, and findings."""
     if not q or len(q.strip()) < 2:
-        return {"query": q, "cases": [], "evidence": [], "events": []}
+        return {"query": q, "cases": [], "evidence": [], "events": [], "observations": [], "findings": []}
 
     from sqlalchemy import select, or_
-    from app.models.models import Case, EvidenceItem, Event
+    from app.models.models import Case, EvidenceItem, Event, Observation, Finding
 
     pattern = f"%{q.strip()}%"
 
@@ -217,6 +267,28 @@ async def global_search(q: str, db: AsyncSession = Depends(get_db)):
     tl_res = await db.execute(tl_stmt)
     events = list(tl_res.scalars().all())
 
+    # Search Observations
+    obs_stmt = select(Observation).where(
+        or_(
+            Observation.content.ilike(pattern),
+            Observation.observation_type.ilike(pattern),
+            Observation.source_file.ilike(pattern),
+        )
+    ).limit(15)
+    obs_res = await db.execute(obs_stmt)
+    observations = list(obs_res.scalars().all())
+
+    # Search Findings
+    find_stmt = select(Finding).where(
+        or_(
+            Finding.title.ilike(pattern),
+            Finding.description.ilike(pattern),
+            Finding.reasoning.ilike(pattern),
+        )
+    ).limit(15)
+    find_res = await db.execute(find_stmt)
+    findings = list(find_res.scalars().all())
+
     return {
         "query": q,
         "cases": [
@@ -230,6 +302,27 @@ async def global_search(q: str, db: AsyncSession = Depends(get_db)):
         "events": [
             {"id": t.id, "case_id": t.case_id, "summary": t.summary, "event_type": t.event_type, "time": t.event_time_utc.isoformat()}
             for t in events
+        ],
+        "observations": [
+            {
+                "id": o.id,
+                "case_id": o.case_id,
+                "content": o.content,
+                "type": o.observation_type,
+                "source_file": o.source_file,
+                "time": o.observed_time_utc.isoformat() if o.observed_time_utc else None,
+            }
+            for o in observations
+        ],
+        "findings": [
+            {
+                "id": f.id,
+                "case_id": f.case_id,
+                "title": f.title,
+                "tier": f.epistemic_tier.value,
+                "confidence": f.confidence_score,
+            }
+            for f in findings
         ],
     }
 

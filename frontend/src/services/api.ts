@@ -140,6 +140,21 @@ export interface GlobalSearchResponse {
     event_type: string;
     time: string;
   }>;
+  observations?: Array<{
+    id: string;
+    case_id: string;
+    content: string;
+    type: string;
+    source_file: string | null;
+    time: string | null;
+  }>;
+  findings?: Array<{
+    id: string;
+    case_id: string;
+    title: string;
+    tier: string;
+    confidence: number | null;
+  }>;
 }
 
 export interface TimelineEvent {
@@ -153,6 +168,113 @@ export interface TimelineEvent {
   time_quality: string | null;
   source_observation_ids: string | null;
   created_at: string;
+}
+
+export interface Observation {
+  id: string;
+  case_id: string;
+  evidence_item_id: string;
+  observation_type: string;
+  content: string;
+  source_file: string | null;
+  source_offset: string | null;
+  parser_name: string | null;
+  parser_version: string | null;
+  observed_time_utc: string | null;
+  original_time_string: string | null;
+  source_timezone: string | null;
+  time_quality: string | null;
+  processing_timestamp: string | null;
+  created_at: string;
+}
+
+export interface ParseResultResponse {
+  evidence_id: string;
+  status: string;
+  parser: string | null;
+  parser_version: string | null;
+  observation_count: number;
+  message: string;
+}
+
+export interface GraphNode {
+  id: string;
+  label: string;
+  type: string;
+  subtitle?: string;
+  icon?: string;
+  risk_level: string;
+  properties: Record<string, any>;
+}
+
+export interface GraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  label: string;
+  relationship_type: string;
+  evidence_ref?: string;
+  timestamp?: string;
+  properties: Record<string, any>;
+}
+
+export interface GraphMetrics {
+  total_nodes: number;
+  total_edges: number;
+  accounts_count: number;
+  devices_count: number;
+  files_count: number;
+  network_ips_count: number;
+  critical_path_nodes: number;
+}
+
+export interface GraphDataResponse {
+  case_id: string;
+  case_number: string;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  metrics: {
+    total_nodes: number;
+    total_edges: number;
+    accounts_count: number;
+    devices_count: number;
+    files_count: number;
+    network_ips_count: number;
+    critical_path_nodes: number;
+  };
+}
+
+export type EpistemicTier = "verified_observation" | "inference" | "hypothesis";
+
+export interface Finding {
+  id: string;
+  case_id: string;
+  title: string;
+  description: string;
+  epistemic_tier: EpistemicTier;
+  confidence_score: number | null;
+  supporting_observation_ids: string[];
+  reasoning: string | null;
+  created_at: string;
+  created_by: string;
+}
+
+export interface FindingCreate {
+  title: string;
+  description: string;
+  epistemic_tier: EpistemicTier;
+  confidence_score?: number;
+  supporting_observation_ids?: string[];
+  reasoning?: string;
+}
+
+export interface FindingsSummaryResponse {
+  case_id: string;
+  total_findings: number;
+  verified_observations: number;
+  inferences: number;
+  hypotheses: number;
+  citation_coverage_pct: number;
 }
 
 // ─── Health API ─────────────────────────────────────────────────────────────
@@ -286,4 +408,85 @@ export const globalSearch = async (query: string): Promise<GlobalSearchResponse>
   const res = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}`);
   if (!res.ok) throw new Error("Global search request failed");
   return res.json();
+};
+
+// ─── Observations API (Phase 6) ─────────────────────────────────────────────
+
+export const parseEvidence = async (evidenceId: string, force: boolean = false): Promise<ParseResultResponse> => {
+  const res = await fetch(`${API_BASE}/evidence/${evidenceId}/parse?force=${force}`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to parse evidence file");
+  return res.json();
+};
+
+export const fetchObservations = async (
+  caseId: string,
+  evidenceId?: string,
+  observationType?: string
+): Promise<Observation[]> => {
+  let url = `${API_BASE}/cases/${caseId}/observations?limit=500`;
+  if (evidenceId) url += `&evidence_id=${encodeURIComponent(evidenceId)}`;
+  if (observationType) url += `&observation_type=${encodeURIComponent(observationType)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch observations");
+  return res.json();
+};
+
+export const fetchObservation = async (observationId: string): Promise<Observation> => {
+  const res = await fetch(`${API_BASE}/observations/${observationId}`);
+  if (!res.ok) throw new Error("Failed to fetch observation");
+  return res.json();
+};
+
+export const fetchObservationTypes = async (
+  caseId: string
+): Promise<Array<{ type: string; count: number }>> => {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/observations/types`);
+  if (!res.ok) throw new Error("Failed to fetch observation types");
+  return res.json();
+};
+
+// ─── Knowledge Graph API (Phase 7) ──────────────────────────────────────────
+
+export const fetchCaseGraph = async (caseId: string): Promise<GraphDataResponse> => {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/graph`);
+  if (!res.ok) throw new Error("Failed to fetch entity knowledge graph");
+  return res.json();
+};
+
+// ─── Epistemic Findings API (Phase 8) ───────────────────────────────────────
+
+export const fetchFindings = async (caseId: string, tier?: string): Promise<Finding[]> => {
+  let url = `${API_BASE}/cases/${caseId}/findings?limit=200`;
+  if (tier) url += `&tier=${encodeURIComponent(tier)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch analytical findings");
+  return res.json();
+};
+
+export const fetchFindingsSummary = async (caseId: string): Promise<FindingsSummaryResponse> => {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/findings/summary`);
+  if (!res.ok) throw new Error("Failed to fetch findings summary");
+  return res.json();
+};
+
+export const createFinding = async (caseId: string, data: FindingCreate): Promise<Finding> => {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/findings`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to create finding");
+  }
+  return res.json();
+};
+
+export const deleteFinding = async (findingId: string): Promise<void> => {
+  const res = await fetch(`${API_BASE}/findings/${findingId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to delete finding");
 };

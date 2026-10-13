@@ -6,19 +6,26 @@ import {
   verifyCustody,
   uploadEvidence,
   createEvidenceMetadata,
+  fetchObservations,
+  parseEvidence,
 } from '../services/api';
 import { useCaseContext } from '../context/CaseContext';
 import { EvidenceContentViewer } from '../components/EvidenceContentViewer';
+import { ObservationsViewerModal } from '../components/ObservationsViewerModal';
 import type {
   EvidenceItem,
   CustodyRecord,
   EvidenceVerifyResponse,
   CustodyVerifyResponse,
+  Observation,
 } from '../services/api';
 
 export const Evidence: React.FC = () => {
   const { activeCaseId, setActiveCaseId, cases } = useCaseContext();
   const [evidenceList, setEvidenceList] = useState<EvidenceItem[]>([]);
+  const [observationsMap, setObservationsMap] = useState<Record<string, Observation[]>>({});
+  const [observationViewerItem, setObservationViewerItem] = useState<EvidenceItem | null>(null);
+  const [parsingId, setParsingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [scopeFilter, setScopeFilter] = useState<'ALL' | 'LOGS' | 'CSV' | 'DISK'>('ALL');
@@ -50,12 +57,36 @@ export const Evidence: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const data = await fetchEvidence(activeCaseId || undefined);
+      const targetCase = activeCaseId || cases[0]?.id;
+      const [data, obs] = await Promise.all([
+        fetchEvidence(activeCaseId || undefined),
+        targetCase ? fetchObservations(targetCase).catch(() => []) : Promise.resolve([]),
+      ]);
       setEvidenceList(data);
+
+      const map: Record<string, Observation[]> = {};
+      for (const o of obs) {
+        if (!map[o.evidence_item_id]) map[o.evidence_item_id] = [];
+        map[o.evidence_item_id].push(o);
+      }
+      setObservationsMap(map);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleParseItem = async (item: EvidenceItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setParsingId(item.id);
+    try {
+      await parseEvidence(item.id, true);
+      await loadData();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setParsingId(null);
     }
   };
 
@@ -365,27 +396,65 @@ export const Evidence: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Observations & Facts Count */}
+                {(() => {
+                  const itemObservations = observationsMap[item.id] || [];
+                  const isParsing = parsingId === item.id;
+                  return (
+                    <div className="flex items-center justify-between bg-surface-container-lowest px-2 py-1.5 rounded border border-outline-variant/40 font-data-mono text-[10px]">
+                      <span className="text-outline uppercase tracking-wider">Observations:</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setObservationViewerItem(item);
+                        }}
+                        className={`font-bold flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors ${
+                          itemObservations.length > 0
+                            ? 'text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30'
+                            : 'text-outline hover:text-on-surface'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[13px]">manage_search</span>
+                        <span>{itemObservations.length > 0 ? `${itemObservations.length} FACTS` : 'NONE'}</span>
+                      </button>
+                    </div>
+                  );
+                })()}
+
                 {/* Forensic Primary Action Buttons */}
                 <div className="space-y-2 pt-1 border-t border-outline-variant/40">
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-1.5">
                     {/* View Raw Content Button */}
                     <button
                       onClick={() => setInspectItem(item)}
-                      className="px-2 py-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/50 text-primary rounded text-[11px] font-data-mono font-bold flex items-center justify-center gap-1 transition-colors"
+                      className="px-1.5 py-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/50 text-primary rounded text-[10px] font-data-mono font-bold flex items-center justify-center gap-1 transition-colors"
                       title="Inspect raw log bitstream & hex representation"
                     >
-                      <span className="material-symbols-outlined text-[14px]">visibility</span>
+                      <span className="material-symbols-outlined text-[13px]">visibility</span>
                       <span>Inspect</span>
+                    </button>
+
+                    {/* Parse Observations Button */}
+                    <button
+                      onClick={(e) => handleParseItem(item, e)}
+                      disabled={parsingId === item.id}
+                      className="px-1.5 py-1.5 bg-surface-container hover:bg-surface-container-highest border border-outline-variant text-on-surface rounded text-[10px] font-data-mono font-semibold flex items-center justify-center gap-1 transition-colors"
+                      title="Execute forensic parser to extract structured observations"
+                    >
+                      <span className={`material-symbols-outlined text-[13px] text-primary ${parsingId === item.id ? 'animate-spin' : ''}`}>
+                        {parsingId === item.id ? 'sync' : 'auto_fix_high'}
+                      </span>
+                      <span>{parsingId === item.id ? 'Parsing...' : 'Parse'}</span>
                     </button>
 
                     {/* Verify Hash Button */}
                     <button
                       onClick={(e) => handleVerifyEvidence(item, e)}
                       disabled={isVerifying}
-                      className="px-2 py-1.5 bg-surface-container hover:bg-surface-container-highest border border-outline-variant text-on-surface rounded text-[11px] font-data-mono font-semibold flex items-center justify-center gap-1 transition-colors"
+                      className="px-1.5 py-1.5 bg-surface-container hover:bg-surface-container-highest border border-outline-variant text-on-surface rounded text-[10px] font-data-mono font-semibold flex items-center justify-center gap-1 transition-colors"
                       title="Calculate on-disk SHA-256 hash and verify against ledger"
                     >
-                      <span className={`material-symbols-outlined text-[14px] text-primary ${isVerifying ? 'animate-spin' : ''}`}>
+                      <span className={`material-symbols-outlined text-[13px] text-primary ${isVerifying ? 'animate-spin' : ''}`}>
                         {isVerifying ? 'sync' : 'fingerprint'}
                       </span>
                       <span>{isVerifying ? 'Hashing...' : 'Verify'}</span>
@@ -427,6 +496,15 @@ export const Evidence: React.FC = () => {
       <EvidenceContentViewer
         evidenceItem={inspectItem}
         onClose={() => setInspectItem(null)}
+      />
+
+      {/* Extracted Forensic Observations Modal */}
+      <ObservationsViewerModal
+        evidenceItem={observationViewerItem}
+        observations={observationViewerItem ? observationsMap[observationViewerItem.id] || [] : []}
+        isOpen={Boolean(observationViewerItem)}
+        onClose={() => setObservationViewerItem(null)}
+        onRefresh={loadData}
       />
 
       {/* Custody Chain & Integrity Modal */}
