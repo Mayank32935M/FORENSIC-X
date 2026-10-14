@@ -4,6 +4,7 @@ import { useCaseContext } from '../context/CaseContext';
 import { CommandPalette } from './CommandPalette';
 import { HealthDiagnosticsModal } from './HealthDiagnosticsModal';
 import { AuditAlertsModal } from './AuditAlertsModal';
+import { AICopilotDrawer } from './AICopilotDrawer';
 
 export const Layout: React.FC = () => {
   const {
@@ -16,6 +17,7 @@ export const Layout: React.FC = () => {
     setIsHealthModalOpen,
     isAlertsModalOpen,
     setIsAlertsModalOpen,
+    setIsCopilotOpen,
   } = useCaseContext();
 
   const [isCaseMenuOpen, setIsCaseMenuOpen] = useState(false);
@@ -181,6 +183,24 @@ export const Layout: React.FC = () => {
               <span>TIER-3</span>
             </div>
 
+            {/* AI Forensics Copilot Button */}
+            <button
+              onClick={() => setIsCopilotOpen(true)}
+              className="flex items-center gap-1.5 px-space-sm py-0.5 rounded bg-primary/10 hover:bg-primary/20 border border-primary/40 text-primary transition-all cursor-pointer group shadow-[0_0_12px_rgba(56,189,248,0.2)]"
+              title="Forensic AI Copilot & Interpretations (Ctrl+J)"
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[15px] group-hover:rotate-12 transition-transform">
+                smart_toy
+              </span>
+              <span className="font-data-mono text-[11px] font-bold tracking-wide uppercase">
+                AI COPILOT
+              </span>
+              <span className="text-[9px] font-data-mono px-1 rounded bg-primary/20 text-primary border border-primary/30">
+                ^J
+              </span>
+            </button>
+
             {/* Notifications Alert Bell */}
             <button
               onClick={() => setIsAlertsModalOpen(true)}
@@ -307,6 +327,20 @@ export const Layout: React.FC = () => {
                 Findings
               </NavLink>
               <button
+                onClick={() => setIsCopilotOpen(true)}
+                className="w-full flex items-center justify-between px-space-sm py-space-xs rounded text-[13px] text-primary hover:bg-primary/10 transition-all text-left font-medium group cursor-pointer"
+              >
+                <div className="flex items-center gap-space-sm">
+                  <span className="material-symbols-outlined text-[18px] text-primary group-hover:scale-110 transition-transform">
+                    smart_toy
+                  </span>
+                  <span>AI Forensics Copilot</span>
+                </div>
+                <span className="text-[10px] font-data-mono px-1 rounded bg-primary/15 text-primary border border-primary/30">
+                  Ctrl+J
+                </span>
+              </button>
+              <button
                 onClick={() => {
                   if (activeCaseId) navigate(`/cases/${activeCaseId}`);
                 }}
@@ -357,7 +391,7 @@ export const Layout: React.FC = () => {
         </main>
       </div>
 
-      {/* Global Modals */}
+      {/* Global Modals & Drawers */}
       <CommandPalette />
       <HealthDiagnosticsModal
         isOpen={isHealthModalOpen}
@@ -367,6 +401,7 @@ export const Layout: React.FC = () => {
         isOpen={isAlertsModalOpen}
         onClose={() => setIsAlertsModalOpen(false)}
       />
+      <AICopilotDrawer />
     </>
   );
 };

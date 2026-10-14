@@ -21,6 +21,7 @@ from app.api.timeline_endpoints import router as timeline_router
 from app.api.observation_endpoints import router as observation_router
 from app.api.graph_endpoints import router as graph_router
 from app.api.findings_endpoints import router as findings_router
+from app.api.ai_endpoints import router as ai_router
 
 setup_logging()
 logger = get_logger(__name__)
@@ -43,18 +44,37 @@ app = FastAPI(
 )
 
 # CORS configuration
-if settings.cors_origins:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.cors_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Exception handlers
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
+
+from fastapi import Request
+from fastapi.responses import RedirectResponse
+
+@app.get("/", tags=["System"])
+async def root(request: Request):
+    """Root entry point: redirects web browsers to /docs and returns status JSON for API clients."""
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept:
+        return RedirectResponse(url="/docs")
+    return {
+        "status": "online",
+        "service": settings.app_name,
+        "version": settings.version,
+        "environment": settings.env,
+        "docs_url": "/docs",
+        "redoc_url": "/redoc",
+        "api_health": "/api/health",
+        "message": "FORENSIC-X API backend is running successfully.",
+    }
 
 # Routers
 app.include_router(api_router, prefix="/api")
@@ -63,3 +83,4 @@ app.include_router(timeline_router, prefix="/api")
 app.include_router(observation_router, prefix="/api")
 app.include_router(graph_router, prefix="/api")
 app.include_router(findings_router, prefix="/api")
+app.include_router(ai_router, prefix="/api")

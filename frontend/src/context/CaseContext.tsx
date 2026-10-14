@@ -14,6 +14,8 @@ interface CaseContextType {
   setIsHealthModalOpen: (open: boolean) => void;
   isAlertsModalOpen: boolean;
   setIsAlertsModalOpen: (open: boolean) => void;
+  isCopilotOpen: boolean;
+  setIsCopilotOpen: (open: boolean) => void;
 }
 
 const CaseContext = createContext<CaseContextType | undefined>(undefined);
@@ -25,6 +27,7 @@ export const CaseProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
   const [isAlertsModalOpen, setIsAlertsModalOpen] = useState(false);
+  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
 
   const refreshCases = async () => {
     try {
@@ -58,17 +61,22 @@ export const CaseProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [activeCaseId, cases]);
 
-  // Keyboard shortcut listener for Cmd+K / Ctrl+K
+  // Keyboard shortcut listener for Cmd+K (Search) & Cmd+J (Copilot)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
         e.preventDefault();
         setIsSearchOpen((prev) => !prev);
+      }
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'j' || e.key === 'J')) {
+        e.preventDefault();
+        setIsCopilotOpen((prev) => !prev);
       }
       if (e.key === 'Escape') {
         setIsSearchOpen(false);
         setIsHealthModalOpen(false);
         setIsAlertsModalOpen(false);
+        setIsCopilotOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -89,6 +97,8 @@ export const CaseProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsHealthModalOpen,
         isAlertsModalOpen,
         setIsAlertsModalOpen,
+        isCopilotOpen,
+        setIsCopilotOpen,
       }}
     >
       {children}

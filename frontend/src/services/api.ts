@@ -1,4 +1,4 @@
-export const API_BASE = "http://localhost:8000/api";
+export const API_BASE = "/api";
 
 // ─── Interfaces ─────────────────────────────────────────────────────────────
 
@@ -489,4 +489,98 @@ export const deleteFinding = async (findingId: string): Promise<void> => {
     method: "DELETE",
   });
   if (!res.ok) throw new Error("Failed to delete finding");
+};
+
+// ─── AI Forensics Copilot API (Phase 9) ────────────────────────────────────
+
+export interface CopilotCitation {
+  id: string;
+  kind: "observation" | "evidence" | "event" | string;
+  type: string;
+  summary: string;
+  source_ref?: string | null;
+}
+
+export interface CopilotQueryRequest {
+  query: string;
+  mode?: "qa" | "narrative" | "anomaly" | "hypothesis" | string;
+}
+
+export interface CopilotQueryResponse {
+  id: string;
+  case_id: string;
+  query: string;
+  mode: string;
+  answer: string;
+  epistemic_tier: EpistemicTier;
+  confidence_score: number;
+  cited_evidence_ids: string[];
+  cited_observation_ids: string[];
+  citations: CopilotCitation[];
+  suggested_followups: string[];
+  model_name: string;
+  prompt_version: string;
+  created_at: string;
+}
+
+export interface AIInterpretationRead {
+  id: string;
+  case_id: string;
+  finding_id: string | null;
+  model_name: string;
+  model_version: string | null;
+  prompt_version: string | null;
+  interpretation: string;
+  epistemic_tier: EpistemicTier;
+  confidence_score: number | null;
+  cited_evidence_ids: string[];
+  cited_observation_ids: string[];
+  created_at: string;
+}
+
+export const queryCopilot = async (
+  caseId: string,
+  query: string,
+  mode: string = "qa"
+): Promise<CopilotQueryResponse> => {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/copilot/query`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, mode }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to query forensic copilot");
+  }
+  return res.json();
+};
+
+export const fetchCopilotHistory = async (caseId: string): Promise<AIInterpretationRead[]> => {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/copilot/history`);
+  if (!res.ok) throw new Error("Failed to fetch copilot interpretation history");
+  return res.json();
+};
+
+export const generateCopilotNarrative = async (caseId: string): Promise<CopilotQueryResponse> => {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/copilot/narrative`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to generate incident narrative");
+  return res.json();
+};
+
+export const scanCopilotAnomalies = async (caseId: string): Promise<CopilotQueryResponse> => {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/copilot/anomalies`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to scan forensic anomalies");
+  return res.json();
+};
+
+export const formulateCopilotHypotheses = async (caseId: string): Promise<CopilotQueryResponse> => {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/copilot/hypotheses`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to formulate investigative hypotheses");
+  return res.json();
 };
