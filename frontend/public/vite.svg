@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="fx-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <linearGradient id="fx-shield" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+  </defs>
+  <path d="M 32 4 L 54 13 C 54 36 44 51 32 60 C 20 51 10 36 10 13 Z" fill="url(#fx-shield)" stroke="#38bdf8" stroke-width="2.5" />
+  <line x1="24" y1="24" x2="40" y2="40" stroke="url(#fx-cyan)" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="40" y1="24" x2="24" y2="40" stroke="url(#fx-cyan)" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="32" cy="32" r="3.5" fill="#f0f9ff" stroke="#38bdf8" stroke-width="1.5" />
+</svg>
