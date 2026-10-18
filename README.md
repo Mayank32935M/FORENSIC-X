@@ -9,12 +9,12 @@
 [![React 19](https://img.shields.io/badge/Frontend-React_19-61DAFB.svg)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6.svg)](https://www.typescriptlang.org/)
 [![TailwindCSS](https://img.shields.io/badge/Styling-Tailwind_CSS-38B2AC.svg)](https://tailwindcss.com/)
-[![Integrity: SHA-256](https://img.shields.io/badge/Integrity-SHA--256_Ledger-10B981.svg)](#cryptographic-chain-of-custody)
+[![Integrity: SHA-256](https://img.shields.io/badge/Integrity-SHA--256_Ledger-10B981.svg)](#-cryptographic-chain-of-custody)
 [![Tests: 19/19 Passing](https://img.shields.io/badge/Tests-19%2F19_Passing-brightgreen.svg)](#-testing--verification)
 
-**FORENSIC-X** is an end-to-end verifiable digital forensics and incident reconstruction framework engineered to bridge raw digital artifacts and court-admissible forensic reconstructions. Built on strict **epistemic truth separation (ADR-006)**, an **immutable on-disk evidence store**, a **cryptographic blockchain-style chain-of-custody ledger**, an **entity knowledge graph**, and an **explainable AI Forensics Copilot**, it eliminates evidence contamination, hallucinated assertions, and retroactively falsified audit trails.
+**FORENSIC-X** is an end-to-end verifiable digital forensics and incident reconstruction framework engineered to bridge raw digital artifacts and court-admissible forensic reconstructions. Built on strict **epistemic truth separation ([ADR-006](DOCS/adr/006-epistemic-tiers.md))**, an **immutable on-disk evidence store**, a **cryptographic blockchain-style chain-of-custody ledger**, an **entity knowledge graph**, and an **adversarially hardened AI Forensics Copilot**, it eliminates evidence contamination, hallucinated assertions, and retroactively falsified audit trails.
 
-[Quickstart](#-quickstart-guide) • [Visual Showcase](#-visual-showcase) • [Architecture](#-system-architecture) • [Epistemic Tiers](#-epistemic-truth-hierarchy) • [Roadmap](#-roadmap) • [Documentation](DOCS/)
+[Quickstart](#-quickstart-guide) • [Visual Showcase](#-visual-showcase) • [Architecture](#-system-architecture) • [Epistemic Tiers](#-epistemic-truth-hierarchy) • [API Catalog](#-api-endpoints-catalog) • [Testing](#-testing--verification) • [Roadmap](#-roadmap--prototype-build-status) • [Documentation](DOCS/)
 
 </div>
 
@@ -30,8 +30,9 @@ Real-time pipeline telemetry (Backend Core, Database, ZFS Evidence Store, Hash E
 
 ---
 
-### 2. AI Forensics Copilot & Explainable Interpretations (`Ctrl+J`)
-Deterministic forensic reasoner with adversarial prompt-injection defense. Synthesizes formal incident briefs with $T_0$ delta chronologies, runs anomaly scans, formulates hypotheses with corroboration checklists, and promotes AI deductions into official case findings with 1 click.
+### 2. AI Forensics Copilot & Explainable Interpretations (`Ctrl+J` / `⌘J`)
+Deterministic forensic reasoner with adversarial prompt-injection defense. Synthesizes formal incident briefs with $T_0$ delta chronologies, runs automated anomaly scans, formulates hypotheses with corroboration checklists, and promotes AI deductions into official case findings with 1 click.
+![AI Forensics Copilot](DOCS/images/copilot.png)
 
 ---
 
@@ -41,7 +42,7 @@ Multi-entity knowledge graph connecting hosts, user accounts, files, USB removab
 
 ---
 
-### 4. Epistemic Findings & Truth Tiers
+### 4. Epistemic Findings & Truth Tiers (ADR-006)
 Explicit demarcation of facts into **Verified Observations** (disk byte truth), **Analytical Inferences** (correlations requiring explicit leaps), and **Investigative Hypotheses** with clickable observation citations.
 ![Findings & Hypotheses](DOCS/images/findings.png)
 
@@ -62,6 +63,13 @@ Harmonized chronological sequence displaying incident deltas ($T_0$), raw timest
 ### 7. Case Overview & Cryptographic Audit Dossier
 Comprehensive case tracking displaying seized artifact metrics, timeline clusters, and on-demand chain-of-custody auditing with interim Merkle-style audit hashes.
 ![Case Overview](DOCS/images/case_overview.png)
+
+---
+
+### 8. Case Directory & Investigative Wizard
+Case workspace management with status tracking, investigator assignments, evidence counting, and guided new-case initialization wizard.
+![Case Directory](DOCS/images/cases_list.png)
+![Create Case Wizard](DOCS/images/create_case.png)
 
 ---
 
@@ -94,16 +102,16 @@ graph TD
 
 ### Core Architecture Principles
 1. **Immutable Storage ([ADR 004](DOCS/adr/004-evidence-storage.md))**: Ingested physical artifacts are written to `data/evidence_store/<case_id>/` and marked read-only.
-2. **Cryptographic Chain of Custody**: Every custody action (`ACQUIRED`, `VERIFIED`, `ACCESSED`) links to the hash of the preceding record (`prior_record_hash`). Any database alteration breaks the chain.
+2. **Cryptographic Chain of Custody**: Every custody action (`ACQUIRED`, `VERIFIED`, `ACCESSED`, `ANALYZED`) links to the cryptographic hash of the preceding record (`prior_record_hash`). Any retroactive database modification breaks the chain.
 3. **UTC Normalization**: Disparate log formats (syslog, auth.log, Windows EVTX, CSV) are normalized into ISO 8601 UTC with relative offset computation ($T_0$).
-4. **Epistemic Truth Separation ([ADR 006](DOCS/adr/006-epistemic-tiers.md))**: Physical data is clearly demarcated from AI deductions or investigator hypotheses. AI deductions are forbidden from claiming the status of direct observations.
-5. **Untrusted Input Defense**: Forensic evidence is untrusted; raw log contents are sanitized against prompt-injection overrides before analysis.
+4. **Epistemic Truth Separation ([ADR 006](DOCS/adr/006-epistemic-tiers.md))**: Physical data is clearly demarcated from machine deductions or investigator hypotheses. Inferences and hypotheses cannot claim the status of direct observations.
+5. **Untrusted Evidence Defense**: Forensic evidence is untrusted; raw log contents are sanitized against prompt-injection overrides before passing into analytical or AI models.
 
 ---
 
 ## 🧭 Epistemic Truth Hierarchy
 
-FORENSIC-X categorizes all investigative knowledge into three distinct tiers:
+FORENSIC-X strictly categorizes all investigative knowledge into three distinct tiers:
 
 | Tier | Name | Epistemic Basis | Requirement | Example |
 |---|---|---|---|---|
@@ -113,11 +121,97 @@ FORENSIC-X categorizes all investigative knowledge into three distinct tiers:
 
 ---
 
+## 📡 API Endpoints Catalog
+
+The FastAPI backend exposes a fully typed REST API with interactive OpenAPI documentation available at `/docs`.
+
+### 1. System & Global
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | Service health status, database connectivity, and engine version |
+| `GET` | `/api/search?q={query}&case_id={case_id}` | Unified search across cases, evidence, observations, and findings |
+
+```bash
+# Verify health
+curl -s http://127.0.0.1:8000/api/health
+```
+
+### 2. Cases Management
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/cases` | List all investigation cases |
+| `POST` | `/api/cases` | Create a new investigation case |
+| `GET` | `/api/cases/{case_id}` | Retrieve case details by ID |
+| `GET` | `/api/cases/{case_id}/telemetry` | Pipeline telemetry, epistemic distribution, and custody score |
+| `GET` | `/api/cases/{case_id}/audit-hash` | Compute interim Merkle audit hash across case custody records |
+
+### 3. Evidence & Cryptographic Custody
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/cases/{case_id}/evidence` | List all seized evidence artifacts for a case |
+| `POST` | `/api/cases/{case_id}/evidence` | Upload & ingest evidence file (SHA-256 hashed on ingest) |
+| `POST` | `/api/cases/{case_id}/evidence/metadata` | Ingest external evidence metadata without file upload |
+| `GET` | `/api/evidence/{evidence_id}` | Retrieve specific evidence item metadata |
+| `POST` | `/api/evidence/{evidence_id}/verify` | Re-hash physical file on disk and verify against ledger |
+| `GET` | `/api/cases/{case_id}/custody` | Retrieve custody ledger audit trail |
+| `GET` | `/api/cases/{case_id}/custody/verify` | Verify entire cryptographic chain of custody continuity |
+
+```bash
+# Verify evidence file on-disk integrity
+curl -X POST http://127.0.0.1:8000/api/evidence/{evidence_id}/verify
+
+# Verify chain-of-custody hash continuity
+curl -s http://127.0.0.1:8000/api/cases/{case_id}/custody/verify
+```
+
+### 4. Observations & Log Parsers
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/evidence/{evidence_id}/parse` | Trigger stream parser (syslog, auth, CSV) on evidence file |
+| `GET` | `/api/cases/{case_id}/observations` | List extracted observations with line/offset provenance |
+
+### 5. Timeline & Temporal Reconstruction
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/cases/{case_id}/timeline` | Normalized UTC chronological sequence with $T_0$ deltas |
+| `GET` | `/api/timeline` | Global timeline across all cases |
+
+### 6. Entity Knowledge Graph
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/cases/{case_id}/graph` | Entity graph nodes, directed edges, and blast-radius clusters |
+
+### 7. Epistemic Findings
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/cases/{case_id}/findings` | List analytical findings (filterable by `tier`) |
+| `POST` | `/api/cases/{case_id}/findings` | Assert an analytical finding with epistemic tier & citations |
+| `GET` | `/api/cases/{case_id}/findings/summary` | Summary metrics of findings per epistemic tier |
+| `GET` | `/api/findings/{finding_id}` | Retrieve single finding by ID |
+
+### 8. AI Forensics Copilot
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/cases/{case_id}/copilot/query` | Query copilot with natural language or targeted mode |
+| `POST` | `/api/cases/{case_id}/copilot/narrative` | Synthesize complete incident reconstruction brief ($T_0$ relative) |
+| `POST` | `/api/cases/{case_id}/copilot/anomalies` | Automated anomaly scan (bursts, off-hours, volume spikes) |
+| `POST` | `/api/cases/{case_id}/copilot/hypotheses` | Formulate investigative hypotheses with corroboration checklists |
+| `GET` | `/api/cases/{case_id}/copilot/history` | Audit trail of all copilot prompts, sanitizations, and deductions |
+
+```bash
+# Generate formal incident brief via AI Copilot
+curl -X POST http://127.0.0.1:8000/api/cases/{case_id}/copilot/narrative \
+  -H "Content-Type: application/json"
+```
+
+---
+
 ## 🚀 Quickstart Guide
 
 ### Prerequisites
-- **Python 3.12+** (tested on 3.12, 3.13, 3.14)
+- **Python 3.12+** (tested on Python 3.12, 3.13, 3.14)
 - **Node.js 18+** & `npm`
+- **Git**
 
 ---
 
@@ -137,18 +231,20 @@ cd backend
 # Create and activate virtual environment
 python -m venv .venv
 
-# Windows:
-.venv\Scripts\activate
-# Linux/macOS:
+# Windows (PowerShell):
+.venv\Scripts\Activate.ps1
+# Windows (CMD):
+# .venv\Scripts\activate.bat
+# Linux / macOS:
 # source .venv/bin/activate
 
-# Install dependencies
+# Install dependencies in editable mode
 pip install -e .
 
-# Seed database with the synthetic "Phantom Exfiltration" scenario
+# Seed database with the synthetic "Phantom Exfiltration" breach scenario
 python -m app.scripts.load_scenario
 
-# Launch FastAPI development server
+# Launch FastAPI server with auto-reload
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
@@ -156,6 +252,7 @@ The backend API will be live at:
 - **Root & Redirect**: [http://127.0.0.1:8000/](http://127.0.0.1:8000/) (Redirects browsers to `/docs`, returns JSON to API clients)
 - **API Health**: [http://127.0.0.1:8000/api/health](http://127.0.0.1:8000/api/health)
 - **Interactive Swagger Docs**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- **ReDoc Specification**: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 
 ---
 
@@ -174,41 +271,46 @@ npm run dev
 ```
 
 The web application will be accessible at:
-- **Interactive Workbench**: [http://localhost:5173/](http://localhost:5173/)
+- **Interactive Forensic Workbench**: [http://localhost:5173/](http://localhost:5173/)
 
 ---
 
 ## 🧪 Testing & Verification
 
-Run the automated backend test suite to verify hash computation, custody tamper-resistance, log parsers, knowledge graph, epistemic findings, and AI copilot:
+The test suite validates cryptographic hashing, tamper-evident ledger verification, multi-format stream parsers, entity knowledge graph generation, epistemic findings, and AI copilot prompt injection resistance.
 
 ```bash
 cd backend
+
+# Windows:
 .venv\Scripts\activate
+# Linux/macOS:
+# source .venv/bin/activate
+
 pytest -v
 ```
 
-Current Test Results:
+Current Test Results (19/19 Passing):
 ```text
-tests/unit/test_ai_copilot.py::test_copilot_narrative_endpoint PASSED    [  5%]
-tests/unit/test_ai_copilot.py::test_copilot_anomalies_endpoint PASSED    [ 10%]
-tests/unit/test_ai_copilot.py::test_copilot_hypotheses_endpoint PASSED   [ 15%]
-tests/unit/test_ai_copilot.py::test_copilot_prompt_injection_sanitization PASSED [ 21%]
-tests/unit/test_ai_copilot.py::test_copilot_history_endpoint PASSED      [ 26%]
-tests/unit/test_api_endpoints.py::test_health_endpoint PASSED            [ 31%]
-tests/unit/test_api_endpoints.py::test_observations_endpoint PASSED      [ 36%]
-tests/unit/test_api_endpoints.py::test_graph_endpoint PASSED             [ 42%]
-tests/unit/test_api_endpoints.py::test_findings_endpoint PASSED          [ 47%]
-tests/unit/test_api_endpoints.py::test_global_search_endpoint PASSED     [ 52%]
-tests/unit/test_custody.py::test_custody_chain_integrity PASSED          [ 57%]
-tests/unit/test_hashing.py::test_compute_file_hash PASSED                [ 63%]
-tests/unit/test_hashing.py::test_verify_hash PASSED                      [ 68%]
-tests/unit/test_hashing.py::test_compute_file_hash_unsupported_algorithm PASSED [ 73%]
-tests/unit/test_hashing.py::test_compute_file_hash_file_not_found PASSED [ 78%]
-tests/unit/test_parsers.py::test_detect_parser PASSED                    [ 84%]
-tests/unit/test_parsers.py::test_syslog_parser PASSED                    [ 89%]
-tests/unit/test_parsers.py::test_auth_parser PASSED                      [ 94%]
-tests/unit/test_parsers.py::test_csv_parser PASSED                       [100%]
+tests/unit/test_ai_copilot.py::test_copilot_narrative_endpoint PASSED             [  5%]
+tests/unit/test_ai_copilot.py::test_copilot_anomalies_endpoint PASSED             [ 10%]
+tests/unit/test_ai_copilot.py::test_copilot_hypotheses_endpoint PASSED            [ 15%]
+tests/unit/test_ai_copilot.py::test_copilot_prompt_injection_sanitization PASSED  [ 21%]
+tests/unit/test_ai_copilot.py::test_copilot_history_endpoint PASSED               [ 26%]
+tests/unit/test_api_endpoints.py::test_health_endpoint PASSED                     [ 31%]
+tests/unit/test_api_endpoints.py::test_observations_endpoint PASSED               [ 36%]
+tests/unit/test_api_endpoints.py::test_graph_endpoint PASSED                      [ 42%]
+tests/unit/test_api_endpoints.py::test_findings_endpoint PASSED                   [ 47%]
+tests/unit/test_api_endpoints.py::test_global_search_endpoint PASSED              [ 52%]
+tests/unit/test_custody.py::test_custody_chain_integrity PASSED                   [ 57%]
+tests/unit/test_hashing.py::test_compute_file_hash PASSED                         [ 63%]
+tests/unit/test_hashing.py::test_verify_hash PASSED                               [ 68%]
+tests/unit/test_hashing.py::test_compute_file_hash_unsupported_algorithm PASSED  [ 73%]
+tests/unit/test_hashing.py::test_compute_file_hash_file_not_found PASSED          [ 78%]
+tests/unit/test_parsers.py::test_detect_parser PASSED                             [ 84%]
+tests/unit/test_parsers.py::test_syslog_parser PASSED                             [ 89%]
+tests/unit/test_parsers.py::test_auth_parser PASSED                               [ 94%]
+tests/unit/test_parsers.py::test_csv_parser PASSED                                [100%]
 
 ============================= 19 passed in 1.32s ==============================
 ```
@@ -221,37 +323,38 @@ tests/unit/test_parsers.py::test_csv_parser PASSED                       [100%]
 FORENSIC-X/
 ├── backend/
 │   ├── app/
-│   │   ├── api/                  # FastAPI REST router handlers
-│   │   │   ├── endpoints.py               # Cases, search, and health endpoints
-│   │   │   ├── evidence_endpoints.py      # Ingestion & SHA-256 verification
-│   │   │   ├── timeline_endpoints.py      # Timeline normalization
+│   │   ├── api/                  # FastAPI REST routers
+│   │   │   ├── endpoints.py               # Cases CRUD, telemetry, search, health
+│   │   │   ├── evidence_endpoints.py      # Ingestion, SHA-256 & custody ledger
+│   │   │   ├── timeline_endpoints.py      # UTC timeline & $T_0$ normalization
 │   │   │   ├── observation_endpoints.py   # Multi-format observation extraction
 │   │   │   ├── graph_endpoints.py         # Knowledge graph query endpoints
-│   │   │   ├── findings_endpoints.py      # Epistemic findings endpoints
+│   │   │   ├── findings_endpoints.py      # Epistemic findings & citations
 │   │   │   └── ai_endpoints.py            # AI Forensics Copilot endpoints
-│   │   ├── core/                 # Config, logging, error handling
+│   │   ├── core/                 # Config, security, logging
 │   │   ├── db/                   # SQLAlchemy async engine & Base
 │   │   ├── models/               # Relational entities (Case, Evidence, Finding, etc.)
 │   │   ├── parsers/              # Stream parsers: Syslog, Auth, CSV USB
 │   │   ├── schemas/              # Pydantic v2 data contracts
-│   │   ├── scripts/              # load_scenario.py synthetic incident seeder
+│   │   ├── scripts/              # Synthetic incident seeder (load_scenario.py)
 │   │   └── services/             # Custody, hashing, graph, findings, and copilot
 │   ├── tests/                    # 19 comprehensive unit tests
-│   └── pyproject.toml            # Backend packaging
+│   └── pyproject.toml            # Backend packaging & dependencies
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── components/           # UI components (AICopilotDrawer, Layout, modals)
-│   │   ├── context/              # CaseContext with global shortcuts (⌘K, ⌘J)
+│   │   ├── components/           # UI components (AICopilotDrawer, Layout, Modals)
+│   │   ├── context/              # CaseContext with global hotkeys (Ctrl+K, Ctrl+J)
 │   │   ├── pages/                # Dashboard, Evidence, Timeline, Graph, Findings
 │   │   ├── services/             # Frontend API client (api.ts)
-│   │   ├── App.tsx               # Client routing
-│   │   └── index.css             # Tailwind design system tokens
+│   │   ├── App.tsx               # Client router & navigation
+│   │   └── index.css             # Tailwind darkroom design system
 │   ├── public/                   # Custom favicon.svg cyber shield
 │   └── package.json              # Frontend dependencies & scripts
 │
 ├── data/
-│   └── synthetic/                # Synthetic breach logs (auth.log, syslog, usb.csv)
+│   ├── evidence_store/           # Immutable evidence vault
+│   └── synthetic/                # Breach log corpora (auth.log, syslog, usb.csv)
 ├── DOCS/
 │   ├── adr/                      # Architectural Decision Records (ADRs 001 - 006)
 │   └── images/                   # High-resolution prototype UI screenshots
@@ -270,7 +373,7 @@ FORENSIC-X/
 - [x] **Phase 5.5**: Modern high-density darkroom UI, evidence matrix, timeline viewer, and case wizard.
 - [x] **Phase 6**: Multi-format log parsers (Linux Syslog, SSH Auth, CSV USB registry) with source line/offset tracking.
 - [x] **Phase 7**: Dynamic entity knowledge graph (nodes, relationships, attack chain paths, and blast radius).
-- [x] **Phase 8**: Epistemic Truth Tiers & findings assertion engine (ADR-006: Verified Observations, Inferences, Hypotheses).
+- [x] **Phase 8**: Epistemic Truth Tiers & findings assertion engine ([ADR-006](DOCS/adr/006-epistemic-tiers.md): Verified Observations, Inferences, Hypotheses).
 - [x] **Phase 9**: AI Forensics Copilot & Explainable Interpretations (Prompt-injection defense, formal briefs, anomaly scanning, one-click promote to finding).
 - [ ] **Phase 10**: Legal Court Dossier Generation & Forensic Case Archival / Export (PDF, Markdown, JSON-LD, Merkle tamper-evident seal).
 - [ ] **Phase 11**: Multi-Investigator Collaboration & Differential Merging (Concurrent conflict resolution, peer sign-off locks).
