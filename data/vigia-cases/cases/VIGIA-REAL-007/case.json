@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.1",
+  "vigia_schema": "1.0",
+  "case_id": "VIGIA-REAL-007",
+  "case_name": "Digital Corpora Nitroba Harassment",
+  "description": "Chemistry professor Lily Tuckrige at Nitroba State University received harassment emails. The captured network traffic (~60MB pcap) revealed the perpetrator used Gmail webmail from an internal dormitory IP address, sending cookies in plaintext over HTTP.",
+  "incident_type": "network_harassment_attribution",
+  "abstention_risk": "medium",
+  "usability_tier": "score_against",
+  "tier_note": "Ground truth verificable. Usar para scoring de precisión.",
+  "source": {
+    "dataset": "Digital Corpora - Nitroba University Harassment Scenario",
+    "origin": "public_dataset",
+    "url": "https://digitalcorpora.org/corpora/scenarios/nitroba-university-harassment-scenario/"
+  },
+  "artifacts": [
+    {
+      "artifact_id": "ART-001",
+      "content": "PCAP ~60MB | External source IP: 140.247.62.34 (student dormitory) | Internal NAT IP: 192.168.15.4 | MAC address: 00:17:f2:e2:c0:ce (Apple device) | User Agent: Firefox 2.0.0.16 / Mac OS X (dominant, 2463 requests); Safari 3.1.2 / Mac OS X (632); iTunes Mac (468); IE6/WinXP SP2 (475, minority) — machine is unambiguously Mac OS X 10.5.4 Leopard | Service used: willselfdestruct.com",
+      "forensic_anomalies": [
+        "Gmail traffic with cookies sent in plaintext over HTTP",
+        "Use of willselfdestruct.com service to send anonymous harassment email"
+      ],
+      "peirce_layer": "FIRSTNESS",
+      "type": "network_flow"
+    },
+    {
+      "artifact_id": "ART-002",
+      "content": "Email #1: badguy@hotmail.com | Date: July 13 | Email #2: willselfdestruct.com | Message: 'you can't find us and you can't hide from us. Stop teaching. Start running.' | Identified account: jcoachj@gmail.com → Johnny Coach (Chem 109 student)",
+      "forensic_anomalies": [
+        "Explicit threat message sent through self-destructing service",
+        "Gmail account jcoach@gmail.com was identified via plaintext cookies in the pcap"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "email_header"
+    },
+    {
+      "artifact_id": "ART-003",
+      "content": "Network setup: Three women share a dormitory (Alice, Barbara, Candice) | Password-less WiFi router installed by a friend | Ethernet provided by university | Student roster: Chemistry 109 available",
+      "forensic_anomalies": [
+        "Password-less WiFi router allows anonymous and untraceable access",
+        "Combination of university Ethernet + unsecured WiFi complicates attribution"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "file_metadata"
+    }
+  ],
+  "_consolidation": {
+    "consolidated_at": "2026-04-28T05:51:15.348869+00:00",
+    "parser_version": "1.0",
+    "schema_version": "1.0",
+    "source_file": "vigia_forensic_cases.json"
+  },
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}

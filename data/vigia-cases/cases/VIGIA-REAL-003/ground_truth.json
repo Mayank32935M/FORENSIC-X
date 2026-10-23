@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.1",
+  "case_id": "VIGIA-REAL-003",
+  "verdict": "MALICE",
+  "confidence_threshold": 94,
+  "carnegie_pattern": null,
+  "peirce_classification": {
+    "firstness": "Apache logs show sqlmap requests and PHP webshells on compromised server",
+    "secondness": "The net user commands and firewall rules correlate with account creation in SAM and opening of RDP",
+    "thirdness": "The attacker exploited SQLi, deployed webshells for persistence, escalated privileges by creating accounts, and prepared remote access via RDP"
+  },
+  "mitre_ttps": [
+    "T1190",
+    "T1059",
+    "T1136.001",
+    "T1021.001",
+    "T1505.003",
+    "T1070"
+  ],
+  "key_iocs": [
+    {
+      "type": "ip_address",
+      "value": "192.168.56.0",
+      "context": "ART-002:bash_history"
+    },
+    {
+      "type": "ip_address",
+      "value": "192.168.56.102",
+      "context": "ART-001:network_flow"
+    }
+  ],
+  "null_hypothesis": "The system administrator was conducting authorized internal penetration testing",
+  "usability_tier": "build_and_test",
+  "scoring_notes": "Ali Hadi #1. Disk + memory from single host. Answers instructor-gated — score with care.",
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}

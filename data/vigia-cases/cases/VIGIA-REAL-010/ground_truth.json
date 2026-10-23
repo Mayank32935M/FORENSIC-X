@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.1",
+  "case_id": "VIGIA-REAL-010",
+  "verdict": "MALICE",
+  "confidence_threshold": 90,
+  "carnegie_pattern": null,
+  "peirce_classification": {
+    "firstness": "SMS from malware exfiltrating PDFs, confidential documents on SD card, reconnaissance searches",
+    "secondness": "The malware was installed by Norby on Taog's phone without his knowledge; negotiations with Mr. E show sale attempt",
+    "thirdness": "Norby conducted an industrial espionage operation stealing documents from SwiftLogic, using mobile malware for exfiltration, and was killed during the negotiation"
+  },
+  "mitre_ttps": [
+    "T1456",
+    "T1533",
+    "T1567",
+    "T1589"
+  ],
+  "key_iocs": [
+    {
+      "type": "ip_address",
+      "value": "50.56.29.109",
+      "context": "ART-002:network_flow"
+    }
+  ],
+  "null_hypothesis": "The documents were legitimately downloaded for authorized competitive analysis and the malware was installed by someone else",
+  "usability_tier": "not_ready",
+  "scoring_notes": "DFRWS 2011 Android. Evidence on personal Dropbox (volatile). README hashes labeled MD5 but are actually SHA1 — phantom mismatch. Needs mirroring + recompute before use.",
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}

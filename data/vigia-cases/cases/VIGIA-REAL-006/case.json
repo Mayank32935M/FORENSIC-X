@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.1",
+  "vigia_schema": "1.0",
+  "case_id": "VIGIA-REAL-006",
+  "case_name": "Digital Corpora M57-Jean Spear-Phishing",
+  "description": "CFO Jean Jones of M57.Biz received spoofed emails apparently from president Alison requesting a spreadsheet with confidential employee data. The attacker manipulated the Reply-To to exfiltrate the data to tuckergorge@gmail.com. Jean acted in good faith but the attack resulted in exfiltration of confidential documents.",
+  "incident_type": "spear_phishing_exfiltration",
+  "abstention_risk": "low",
+  "usability_tier": "practice_only",
+  "tier_note": "Soluciones ampliamente publicadas. No usar para scoring; sí para desarrollo.",
+  "source": {
+    "dataset": "Digital Corpora - M57-Jean Scenario",
+    "origin": "public_dataset",
+    "url": "https://digitalcorpora.org/corpora/scenarios/m57-jean/"
+  },
+  "artifacts": [
+    {
+      "artifact_id": "ART-001",
+      "content": "Email #1: From: alison@m57.biz | To: jean@m57.biz | Date: 2008-07-19 16:39:57 PDT | Subject: background checks | Return-Path: simsong@xy.dreamhostps.com [SPOOFED] | Reply-To: alison@m57.biz (legitimate) | Note: 'please do not include the text of this email in your reply'",
+      "forensic_anomalies": [
+        "Actual Return-Path (simsong@xy.dreamhostps.com) does not match the From address (alison@m57.biz)",
+        "The note 'do not include the text' is highly suspicious as an attempt to destroy evidence"
+      ],
+      "peirce_layer": "FIRSTNESS",
+      "type": "email_header"
+    },
+    {
+      "artifact_id": "ART-002",
+      "content": "Email #2: From: alison@m57.biz | To: jean@m57.biz | Date: 2008-07-19 18:22:45 PDT | Subject: Please send me the information now | Return-Path: simsong@xy.dreamhostps.com [SPOOFED] | Reply-To: tuckergorge@gmail.com [MALICIOUS - CHANGED from email #1]",
+      "forensic_anomalies": [
+        "Reply-To changed from alison@m57.biz to tuckergorge@gmail.com between consecutive emails",
+        "The same spoofed Return-Path indicates a coordinated phishing campaign",
+        "REPLY-TO CHANGE between consecutive emails is the definitive signature of the spoofing attack"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "email_header"
+    },
+    {
+      "artifact_id": "ART-003",
+      "content": "File: m57biz.xls | Location: Jean's Desktop (C:/Documents and Settings/Jean/Desktop/) | Creation date: 07/20/2008 1:28:03 AM GMT | Encrypted: No | Content: Names, positions, salaries ($1,009,000 total) and SSNs of 8 employees | Initial sector: 5,160,295",
+      "forensic_anomalies": [
+        "File with SSNs and salaries stored unencrypted on Desktop",
+        "The file was created minutes before being sent to the malicious Reply-To"
+      ],
+      "peirce_layer": "FIRSTNESS",
+      "type": "file_metadata"
+    },
+    {
+      "artifact_id": "ART-004",
+      "content": "Alison's reply to Jean: 'What's a sure thing?' (16:50:20 PDT) | Exfiltration email: Jean → tuckergorge@gmail.com with attachment M57biz.xls (18:28:45 PDT) | Attacker's email #3: 'Thanks!' (22:03:40 PDT)",
+      "forensic_anomalies": [
+        "Alison's confusion proves she did not send the original email",
+        "The 6-hour window between first email and attacker's confirmation shows a compressed attack window"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "bash_history"
+    },
+    {
+      "artifact_id": "ART-005",
+      "content": "Deleted system binaries: ipconfig.exe, net.exe | AIM6 installed with suspicious toolbar bundles | Cached HTML files: rcstatus.htm, InstallStatus[1].htm (fake Microsoft prompts) | Remote Assistance artifacts in Windows Help directories",
+      "forensic_anomalies": [
+        "Deletion of system binaries is an indicator of anti-forensics or prior compromise",
+        "Presence of HTML with fake Microsoft prompts suggests additional social engineering techniques"
+      ],
+      "peirce_layer": "THIRDNESS",
+      "type": "process_list"
+    }
+  ],
+  "_consolidation": {
+    "consolidated_at": "2026-04-28T05:51:15.348856+00:00",
+    "parser_version": "1.0",
+    "schema_version": "1.0",
+    "source_file": "vigia_forensic_cases.json"
+  },
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}

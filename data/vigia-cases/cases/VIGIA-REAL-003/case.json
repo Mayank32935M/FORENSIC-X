@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.1",
+  "vigia_schema": "1.0",
+  "case_id": "VIGIA-REAL-003",
+  "case_name": "Ali Hadi Web Server Compromise",
+  "description": "The web server of a company running Windows Server 2008 Standard and XAMPP was compromised through SQL injection in DVWA. The attacker deployed PHP webshells, created user accounts, and configured RDP access from the internal subnet.",
+  "incident_type": "web_compromise_persistence",
+  "abstention_risk": "low",
+  "usability_tier": "build_and_test",
+  "tier_note": "Soluciones disponibles pero con restricciones. Reportar si el agente razonó o recordó.",
+  "source": {
+    "dataset": "Ali Hadi Challenge #1 - Web Server Case",
+    "origin": "public_dataset",
+    "url": "https://www.ashemery.com/dfir.html"
+  },
+  "artifacts": [
+    {
+      "artifact_id": "ART-001",
+      "content": "Apache access.log | Attacker IP: 192.168.56.102 | User-Agent: sqlmap/1.* (automated tool) | Requests: GET /dvwa/vulnerabilities/sqli/?id=1 AND 1=1 UNION SELECT... | Other User-Agent: IceWeasel (typical Kali Linux browser)",
+      "forensic_anomalies": [
+        "Presence of sqlmap User-Agent indicating automated SQL injection attack",
+        "IP 192.168.56.102 is typical of Kali Linux virtual machines in VirtualBox"
+      ],
+      "peirce_layer": "FIRSTNESS",
+      "type": "network_flow"
+    },
+    {
+      "artifact_id": "ART-002",
+      "content": "Commands executed via webshell/cmd.exe: net user user1 user1 /add | net localgroup 'Remote Desktop Users' user1 /add | netsh advfirewall firewall add rule name='Remote Desktop' dir=in action=allow protocol=TCP localport=3389 remoteip=192.168.56.0/24 | net user hacker hacker /add",
+      "forensic_anomalies": [
+        "Simultaneous creation of two unauthorized user accounts (user1 and hacker)",
+        "Firewall modification to allow RDP from attacker's specific subnet"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "bash_history"
+    },
+    {
+      "artifact_id": "ART-003",
+      "content": "httpd.exe PID 2796 and PID 2880 (Apache HTTP Server) | Memory strings show traces of executed commands | Temporary files: tmpukudk.php, tmpbiwuc.php (PHP droppers) | Volatility profile: Win2008SP2x86 | Hostname: WIN-L0ZZQ76PMUF",
+      "forensic_anomalies": [
+        "httpd.exe processes contain system command strings in memory",
+        "Temporary PHP files with random names indicate dropped webshells"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "process_list"
+    },
+    {
+      "artifact_id": "ART-004",
+      "content": "SAM Registry Hive: Users created simultaneously - user1 [SID 1005] and hacker [SID 1006] | MFT entries for tmpukudk and tmpbiwuc | File webshells.zip contains shells including C99 | User creation timestamp: 02/09/2015 09:04:35 PDT",
+      "forensic_anomalies": [
+        "Two new users with consecutive SIDs created at the same timestamp",
+        "Presence of C99 shell in webshells.zip archive"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "file_metadata"
+    }
+  ],
+  "_consolidation": {
+    "consolidated_at": "2026-04-28T05:51:15.348820+00:00",
+    "parser_version": "1.0",
+    "schema_version": "1.0",
+    "source_file": "vigia_forensic_cases.json"
+  },
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}

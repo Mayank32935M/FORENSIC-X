@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.1",
+  "case_id": "VIGIA-REAL-002",
+  "verdict": "MALICE",
+  "confidence_threshold": 93,
+  "carnegie_pattern": "Evasion Accountability",
+  "peirce_classification": {
+    "firstness": "Suspicious emails with data requests, file renaming, and installation of cleanup tools",
+    "secondness": "The timeline shows a coherent sequence: request → search → copy → rename → exfiltration → anti-forensics",
+    "thirdness": "Sr. Informant acted with malicious intent as an insider threat, coordinating corporate data exfiltration through multiple channels"
+  },
+  "mitre_ttps": [
+    "T1048",
+    "T1567",
+    "T1078",
+    "T1070",
+    "T1564"
+  ],
+  "key_iocs": [
+    {
+      "type": "email",
+      "value": "iaman.informant.personal@gmail.com",
+      "context": "ART-004:bash_history"
+    },
+    {
+      "type": "email",
+      "value": "iaman.informant@nist.gov",
+      "context": "ART-002:email_header"
+    },
+    {
+      "type": "email",
+      "value": "spy.conspirator@nist.gov",
+      "context": "ART-002:email_header"
+    },
+    {
+      "type": "ip_address",
+      "value": "10.11.11.128",
+      "context": "ART-005:network_flow"
+    },
+    {
+      "type": "ip_address",
+      "value": "10.11.11.129",
+      "context": "ART-001:auth_log"
+    }
+  ],
+  "null_hypothesis": "Sr. Informant was conducting legitimate work transfers during extended hours and the cleanup tools were installed by the IT department",
+  "usability_tier": "score_against",
+  "scoring_notes": "Step-by-step answer key available at NIST CFReDS. Maps onto VIGIA Dungan starter case. Strong for scoring.",
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}

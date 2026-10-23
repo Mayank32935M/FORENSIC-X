@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.1",
+  "vigia_schema": "1.0",
+  "case_id": "VIGIA-REAL-001",
+  "case_name": "NIST Hacking Case (Greg Schardt / Mr. Evil)",
+  "description": "On 09/20/04, a Dell CPi laptop serial VLQLW was found abandoned with a wireless PCMCIA card and a homemade 802.11b antenna. The suspect Greg Schardt alias Mr. Evil was war driving near public WiFi hotspots to intercept traffic and steal credentials.",
+  "incident_type": "war_driving_credential_theft",
+  "abstention_risk": "low",
+  "usability_tier": "score_against",
+  "tier_note": "Ground truth verificable. Usar para scoring de precisión.",
+  "source": {
+    "dataset": "NIST CFReDS - Hacking Case",
+    "origin": "public_dataset",
+    "url": "https://cfreds.nist.gov/all/NIST/HackingCase"
+  },
+  "artifacts": [
+    {
+      "artifact_id": "ART-001",
+      "content": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\RegisteredOwner = Greg Schardt | HKLM\\SYSTEM\\ControlSet001\\Control\\ComputerName\\ComputerName = N-1A9ODN6ZXK4LQ | HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\DefaultUserName = Mr. Evil",
+      "forensic_anomalies": [
+        "The default username is Mr. Evil, indicative of an attacker alias",
+        "The registered owner matches the identified suspect"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "registry"
+    },
+    {
+      "artifact_id": "ART-002",
+      "content": "Intercepted pcap file at C:\\Documents and Settings\\Mr. Evil\\interception | Victim: Windows CE Pocket PC | Sites accessed: login.passport.com, mobile.msn.com, MSN Hotmail | Capture performed with Ethereal",
+      "forensic_anomalies": [
+        "pcap file with intercepted traffic from third-party devices",
+        "The victim was using a Windows CE Pocket PC at a public hotspot"
+      ],
+      "peirce_layer": "FIRSTNESS",
+      "type": "network_flow"
+    },
+    {
+      "artifact_id": "ART-003",
+      "content": "IRC channels accessed: #Chataholics.UnderNet, #CyberCafe.UnderNet, #Elite.Hackers.UnderNet, #evilfork.EFnet, #ISO-WAREZ.EFnet, #thedarktower.AfterNET | IRC user: Mini Me, Nick: Mr, Alt: mrevilrulez",
+      "forensic_anomalies": [
+        "Presence in hacking channels (#Elite.Hackers.UnderNet, #evilfork.EFnet)",
+        "The nickname mrevilrulez matches the email mrevilrulez@yahoo.com"
+      ],
+      "peirce_layer": "THIRDNESS",
+      "type": "bash_history"
+    },
+    {
+      "artifact_id": "ART-004",
+      "content": "Files in Recycle Bin: Dc1.exe (lalsetup250.exe - Look@LAN installer), Dc2.exe (netstumblerinstaller_0_4_0.exe), Dc3.exe (WinPcap_3_01_a.exe), Dc4.exe (ethereal-setup-0.10.6.exe) | Image MD5 hash: aee4fcd9301c03b3b054623ca261959a",
+      "forensic_anomalies": [
+        "Presence of hacking tool executables in Recycle Bin without permanent deletion",
+        "NetStumbler is a specific tool for war driving"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "file_metadata"
+    },
+    {
+      "artifact_id": "ART-005",
+      "content": "SMTP: whoknowsme@sbcglobal.net | Primary email: mrevilrulez@yahoo.com | NNTP: Configured for 5+ newsgroups | Programs: Outlook Express, mIRC",
+      "forensic_anomalies": [
+        "SMTP address different from primary email (possible evasion)",
+        "Use of newsgroups for alternative communication"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "email_header"
+    }
+  ],
+  "_consolidation": {
+    "consolidated_at": "2026-04-28T05:51:15.348772+00:00",
+    "parser_version": "1.0",
+    "schema_version": "1.0",
+    "source_file": "vigia_forensic_cases.json"
+  },
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}

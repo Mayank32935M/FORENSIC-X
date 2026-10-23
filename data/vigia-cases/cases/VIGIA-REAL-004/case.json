@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.1",
+  "vigia_schema": "1.0",
+  "case_id": "VIGIA-REAL-004",
+  "case_name": "Ali Hadi SysInternals Malware Case",
+  "description": "A user downloaded what they believed was the SysInternals Suite but was actually a malware downloader. The system became slow and unresponsive after execution. The malware modified the hosts file, downloaded a secondary payload, and installed it as a fake Windows service.",
+  "incident_type": "malware_masquerading_persistence",
+  "abstention_risk": "low",
+  "usability_tier": "practice_only",
+  "tier_note": "Soluciones ampliamente publicadas. No usar para scoring; sí para desarrollo.",
+  "source": {
+    "dataset": "Ali Hadi Challenge #7 - SysInternals Case",
+    "origin": "public_dataset",
+    "url": "https://www.binary-zone.com/2023/03/27/challenge-7-sysinternals-case/"
+  },
+  "artifacts": [
+    {
+      "artifact_id": "ART-001",
+      "content": "File: C:\\Users\\Public\\Downloads\\SysInternals.exe | VT hash: 72e6d1728a546c2f3ee32c063ed09fa6ba8c46ac33b0dd2e354087c1ad26ef48 | Spoofed version info: CompanyName='SysInternals, Inc.', FileDescription='SysInternals Suite Downloader', FileVersion='2.0.0.1' | APIs: URLDownloadToFileA, InternetOpenUrlA, ShellExecuteA",
+      "forensic_anomalies": [
+        "The executable has version information mimicking SysInternals (Microsoft) but is not legitimate",
+        "Presence of file download APIs (URLDownloadToFileA) indicates a downloader"
+      ],
+      "peirce_layer": "FIRSTNESS",
+      "type": "file_metadata"
+    },
+    {
+      "artifact_id": "ART-002",
+      "content": "UTC Timeline: 2022-11-15 21:16:08 - IEUser logon | 21:17:03 - PowerShell modifies Defender and hosts file | 21:18:40 - SysInternals.exe download via MSEdge | 21:19:00 - Double-click SysInternals.exe | 21:19:17 - Download from http://www.malware430.com/html/VMwareUpdate.exe | 21:19:22 - vmtoolsIO.exe installed as service",
+      "forensic_anomalies": [
+        "Compressed event sequence in 3 minutes: download → execution → secondary download → service installation",
+        "Download from malware430.com occurs 17 seconds after execution"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "timestamp"
+    },
+    {
+      "artifact_id": "ART-003",
+      "content": "Executable strings: 'c:\\Windows\\vmtoolsIO.exe' | 'c:\\Windows\\' | '/C c:\\Windows\\vmtoolsIO.exe -install && net start VMwareIOHelperService && sc config VMwareIOHelperService start= auto' | Hosts modified: sysinternals.com and malware430.com redirected to 192.168.x.x",
+      "forensic_anomalies": [
+        "The malware installs a service with a VMware-like name to avoid detection",
+        "Modification of the hosts file to redirect legitimate domains to internal IPs"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "bash_history"
+    },
+    {
+      "artifact_id": "ART-004",
+      "content": "Malicious service installed: Name='VMwareIOHelperService', Executable='c:\\Windows\\vmtoolsIO.exe', StartType=auto | USN Journal: Creation and deletion of SysInternals.exe | Deleted prefetch: *.pf removed (anti-forensics) | BAM/DAM: SysInternals.exe and conhost.exe executed",
+      "forensic_anomalies": [
+        "Service name mimicking VMware to evade detection",
+        "Deletion of prefetch files as an anti-forensic technique"
+      ],
+      "peirce_layer": "THIRDNESS",
+      "type": "registry"
+    }
+  ],
+  "_consolidation": {
+    "consolidated_at": "2026-04-28T05:51:15.348832+00:00",
+    "parser_version": "1.0",
+    "schema_version": "1.0",
+    "source_file": "vigia_forensic_cases.json"
+  },
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}

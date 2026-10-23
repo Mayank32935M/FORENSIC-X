@@ -1,0 +1,123 @@
+{
+  "schema_version": "1.1",
+  "generated_at": "2026-05-29T22:16:20.145405+00:00",
+  "total_cases": 10,
+  "tier_counts": {
+    "score_against": 3,
+    "build_and_test": 3,
+    "practice_only": 2,
+    "not_ready": 2
+  },
+  "cases": [
+    {
+      "case_id": "VIGIA-REAL-001",
+      "case_name": "NIST Hacking Case (Greg Schardt / Mr. Evil)",
+      "verdict": "MALICE",
+      "usability_tier": "score_against",
+      "incident_type": "war_driving_credential_theft",
+      "abstention_risk": "low",
+      "source_url": "https://cfreds.nist.gov/all/NIST/HackingCase",
+      "case_json_sha256": "030fd27450759491dea82034038238362be5a680e9e059c9d1fb5a484fdc2001",
+      "ground_truth_sha256": "7d46e1595b879a95d880570ebea11bb6855ccc1423658960d7a104726501ac9c"
+    },
+    {
+      "case_id": "VIGIA-REAL-002",
+      "case_name": "NIST Data Leakage Case (Sr. Informant)",
+      "verdict": "MALICE",
+      "usability_tier": "score_against",
+      "incident_type": "insider_threat_exfiltration",
+      "abstention_risk": "low",
+      "source_url": "https://cfreds.nist.gov/all/NIST/DataLeakageCase",
+      "case_json_sha256": "7ea36adabd13876128916e5ba75193487c9dd089b14b40e24f99796675c7b555",
+      "ground_truth_sha256": "e7e1a7f533aeab1769270356b27c860264948e0205ce7ff2698c6cdbb950e0c6"
+    },
+    {
+      "case_id": "VIGIA-REAL-003",
+      "case_name": "Ali Hadi Web Server Compromise",
+      "verdict": "MALICE",
+      "usability_tier": "build_and_test",
+      "incident_type": "web_compromise_persistence",
+      "abstention_risk": "low",
+      "source_url": "https://www.ashemery.com/dfir.html",
+      "case_json_sha256": "69f46658bb9d908968afac590db2147b3f8f3b69306a898e4500908928236c8c",
+      "ground_truth_sha256": "681352323758b689668ddf473de9fce3fed61afbb5c9057aebae395c7d9a66de"
+    },
+    {
+      "case_id": "VIGIA-REAL-004",
+      "case_name": "Ali Hadi SysInternals Malware Case",
+      "verdict": "MALICE",
+      "usability_tier": "practice_only",
+      "incident_type": "malware_masquerading_persistence",
+      "abstention_risk": "low",
+      "source_url": "https://www.binary-zone.com/2023/03/27/challenge-7-sysinternals-case/",
+      "case_json_sha256": "8a64ee66456739dd1edb033681e0c62e856b5adc9990c31c40a315c20012a3a5",
+      "ground_truth_sha256": "c45469da320f07db8f5be3cc0c666724191c5d614abba1df7e25f47ffec18bab"
+    },
+    {
+      "case_id": "VIGIA-REAL-005",
+      "case_name": "Ali Hadi Encrypt Them All Case",
+      "verdict": "SUSPICION",
+      "usability_tier": "build_and_test",
+      "incident_type": "encryption_concealment",
+      "abstention_risk": "medium",
+      "source_url": "https://www.binary-zone.com/2023/03/27/challenge-9-encrypt-them-all-case/",
+      "case_json_sha256": "d6a98561b771ed1e2a6396c799a3ba7609b8bc1f94debe51859d3a7da2b3ee1f",
+      "ground_truth_sha256": "6c7906c71f409a8b4bfaebed461f8a2258f53a87d07274b9d91b7f08d079bcf6"
+    },
+    {
+      "case_id": "VIGIA-REAL-006",
+      "case_name": "Digital Corpora M57-Jean Spear-Phishing",
+      "verdict": "MALICE",
+      "usability_tier": "practice_only",
+      "incident_type": "spear_phishing_exfiltration",
+      "abstention_risk": "low",
+      "source_url": "https://digitalcorpora.org/corpora/scenarios/m57-jean/",
+      "case_json_sha256": "9efa73086c72cd757ced0d215b62c983f1df7e7fde2e2a427787e60ada85df7a",
+      "ground_truth_sha256": "32faff00870b8898f5ea5df01adcf078feaca04793323f605ac4871d9aa73961"
+    },
+    {
+      "case_id": "VIGIA-REAL-007",
+      "case_name": "Digital Corpora Nitroba Harassment",
+      "verdict": "MALICE",
+      "usability_tier": "score_against",
+      "incident_type": "network_harassment_attribution",
+      "abstention_risk": "medium",
+      "source_url": "https://digitalcorpora.org/corpora/scenarios/nitroba-university-harassment-scenario/",
+      "case_json_sha256": "ec771b1711f40ff50d7ac6e1aed30335b49f01372fa9215e8dfc0e48681da463",
+      "ground_truth_sha256": "7d8bbf091b3a900e892406e3ef2fb417dffad12f5f5f81253db866483f3a0a7c"
+    },
+    {
+      "case_id": "VIGIA-REAL-008",
+      "case_name": "Volatility Cridex Banking Trojan",
+      "verdict": "MALICE",
+      "usability_tier": "not_ready",
+      "incident_type": "banking_trojan_credential_theft",
+      "abstention_risk": "low",
+      "source_url": "https://github.com/volatilityfoundation/volatility/wiki/Memory-Samples",
+      "case_json_sha256": "90e4a1d05e19434b383d467c42af31abb1deb56e76a464af3bbdc779c85f6e62",
+      "ground_truth_sha256": "8ce2ffdf35a058b175845714e302201aa30cb93c63b9043074d9f894946d2824"
+    },
+    {
+      "case_id": "VIGIA-REAL-009",
+      "case_name": "DFRWS 2008 Linux Exfiltration",
+      "verdict": "MALICE",
+      "usability_tier": "build_and_test",
+      "incident_type": "insider_exfiltration_privilege_escalation",
+      "abstention_risk": "low",
+      "source_url": "https://github.com/dfrws/dfrws2008-challenge",
+      "case_json_sha256": "b73b23ae293d726019ac3845a56209c75bffbb41955ea5d8607446a8fed68b06",
+      "ground_truth_sha256": "e791f791128e426a51e5b066c7e0b413ab594b26ff428830ec254589d757351a"
+    },
+    {
+      "case_id": "VIGIA-REAL-010",
+      "case_name": "DFRWS 2011 Android Espionage",
+      "verdict": "MALICE",
+      "usability_tier": "not_ready",
+      "incident_type": "mobile_espionage_industrial",
+      "abstention_risk": "medium",
+      "source_url": "https://github.com/dfrws/dfrws2011-challenge",
+      "case_json_sha256": "4f6129c1385e2457d5bc73fc71b99391ca77c723be4d55a21b7200fb97c973ed",
+      "ground_truth_sha256": "9e6cb36170e07c8a174928031e4a76e127b566530a73828995d50e290cc4ece3"
+    }
+  ]
+}

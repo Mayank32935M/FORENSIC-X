@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.1",
+  "case_id": "VIGIA-REAL-001",
+  "verdict": "MALICE",
+  "confidence_threshold": 95,
+  "carnegie_pattern": null,
+  "peirce_classification": {
+    "firstness": "Presence of multiple wireless hacking tools and network captures on a laptop",
+    "secondness": "Records link the device to Greg Schardt who uses the alias Mr. Evil, and traffic captures of third parties are found",
+    "thirdness": "The suspect systematically performs war driving near WiFi hotspots to intercept communications and steal financial credentials"
+  },
+  "mitre_ttps": [
+    "T1018",
+    "T1040",
+    "T1056",
+    "T1552",
+    "T1595",
+    "T1595.001"
+  ],
+  "key_iocs": [
+    {
+      "type": "email",
+      "value": "mrevilrulez@yahoo.com",
+      "context": "ART-005:email_header"
+    },
+    {
+      "type": "email",
+      "value": "whoknowsme@sbcglobal.net",
+      "context": "ART-005:email_header"
+    },
+    {
+      "type": "file_hash",
+      "value": "aee4fcd9301c03b3b054623ca261959a",
+      "context": "ART-004:file_metadata"
+    },
+    {
+      "type": "file_path",
+      "value": "C:\\Program Files\\Look@LAN\\irunin.ini",
+      "context": "ART-004:file_metadata",
+      "note": "Links Greg Schardt to alias Mr.Evil — NIST Q12 answer"
+    },
+    {
+      "type": "file_path",
+      "value": "C:\\Program Files\\mIRC\\mirc.ini",
+      "context": "ART-003:bash_history",
+      "note": "mIRC config: user=Mini Me, nick=Mr, anick=mrevilrulez"
+    },
+    {
+      "type": "hostname",
+      "value": "N-1A9ODN6ZXK4LQ",
+      "context": "ART-001:registry"
+    },
+    {
+      "type": "ip_address",
+      "value": "192.168.1.111",
+      "context": "ART-002:network_flow"
+    },
+    {
+      "type": "mac_address",
+      "value": "00:10:a4:93:3e:09",
+      "context": "ART-002:network_flow"
+    },
+    {
+      "type": "username",
+      "value": "mrevil2000",
+      "context": "ART-003:bash_history",
+      "note": "Yahoo ID"
+    },
+    {
+      "type": "windows_sid",
+      "value": "S-1-5-21-2000478354-688789844-1708537768-1003",
+      "context": "ART-001:registry",
+      "note": "Mr. Evil SID"
+    }
+  ],
+  "null_hypothesis": "Greg Schardt is a legitimate security professional who analyzes networks as part of his penetration testing work",
+  "usability_tier": "score_against",
+  "scoring_notes": "Self-validates via published MD5 + community-validated answers from multiple independent forensic writeups. Note: NIST does not publish an official answer key for this case — the CFReDS page (cfreds-archive.nist.gov/Hacking_Case.html) contains only the questions. Community answers have been cross-validated across independent sources but should not be treated as authoritative.",
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}

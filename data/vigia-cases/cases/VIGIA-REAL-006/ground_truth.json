@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.1",
+  "case_id": "VIGIA-REAL-006",
+  "verdict": "MALICE",
+  "confidence_threshold": 91,
+  "carnegie_pattern": "Noble motive appeal (false client urgency)",
+  "peirce_classification": {
+    "firstness": "Email apparently from president requesting confidential data; Return-Path spoofed to simsong@xy.dreamhostps.com",
+    "secondness": "Reply-To changes from alison@m57.biz (legitimate) to tuckergorge@gmail.com (malicious) between consecutive emails; Alison genuinely confused by Jean's reply",
+    "thirdness": "Attacker performed spear-phishing with hierarchical identity spoofing to induce exfiltration of employees' financial and personal data"
+  },
+  "mitre_ttps": [
+    "T1566.002",
+    "T1567.001",
+    "T1585.001",
+    "T1070"
+  ],
+  "key_iocs": [
+    {
+      "type": "email",
+      "value": "alison@m57.biz",
+      "context": "ART-001:email_header"
+    },
+    {
+      "type": "email",
+      "value": "jean@m57.biz",
+      "context": "ART-001:email_header"
+    },
+    {
+      "type": "email",
+      "value": "simsong@xy.dreamhostps.com",
+      "context": "ART-001:email_header"
+    },
+    {
+      "type": "email",
+      "value": "tuckergorge@gmail.com",
+      "context": "ART-002:email_header"
+    }
+  ],
+  "null_hypothesis": "Jean acted in good faith following standard client service procedure; the email appeared legitimate and came from her direct superior",
+  "usability_tier": "practice_only",
+  "scoring_notes": "M57-Jean. Live dataset but solutions are everywhere. Practice only. Useful for Reply-To / spear-phishing detection dev.",
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}

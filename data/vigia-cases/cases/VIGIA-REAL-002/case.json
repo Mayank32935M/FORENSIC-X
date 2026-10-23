@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.1",
+  "vigia_schema": "1.0",
+  "case_id": "VIGIA-REAL-002",
+  "case_name": "NIST Data Leakage Case (Sr. Informant)",
+  "description": "Sr. Informant, a technology development manager at OOO company, received an offer from a conspirator to leak confidential information about new technologies. He used email, Google Drive, USB, and CD-R to exfiltrate data while applying anti-forensic techniques.",
+  "incident_type": "insider_threat_exfiltration",
+  "abstention_risk": "low",
+  "usability_tier": "score_against",
+  "tier_note": "Ground truth verificable. Usar para scoring de precisión.",
+  "source": {
+    "dataset": "NIST CFReDS - Data Leakage Case",
+    "origin": "public_dataset",
+    "url": "https://cfreds.nist.gov/all/NIST/DataLeakageCase"
+  },
+  "artifacts": [
+    {
+      "artifact_id": "ART-001",
+      "content": "Event ID 4624 (Logon) - 2015-03-23 16:00:22 Eastern Time+DST | Event ID 4647 (Logoff) - 2015-03-23 17:02:53 | Event ID 4608 (Startup) - 2015-03-24 09:21:29 | Event ID 1100 (Shutdown) - 2015-03-24 17:07:26 | Account: informant | IP: 10.11.11.129",
+      "forensic_anomalies": [
+        "Logon activity outside permitted hours (16:00 is the policy limit)",
+        "Quick logoff pattern on March 24 following exfiltration activity"
+      ],
+      "peirce_layer": "FIRSTNESS",
+      "type": "auth_log"
+    },
+    {
+      "artifact_id": "ART-002",
+      "content": "From: spy.conspirator@nist.gov | To: iaman.informant@nist.gov | Subject: (important request) | Body: conformal But, I need a more data. Do your best. | Date: 2015-03-23 | Follow-up: Subject 'Last request' - 2015-03-24 09:26: This is the last request. I want to get the remaining data.",
+      "forensic_anomalies": [
+        "Emails from an external domain (nist.gov) requesting confidential data",
+        "Conspiratorial language ('conformal', 'I need more data')"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "email_header"
+    },
+    {
+      "artifact_id": "ART-003",
+      "content": "Confidential files found: [secret_project]_pricing_decision.docx, [secret_project]_final_meeting.pptx | Action: Renamed with changed extensions (.docx to .mp3, .pptx to .jpg) | Rename timestamp: 2015-03-23 16:26-17:02 Eastern Time",
+      "forensic_anomalies": [
+        "Deliberate extension changes to conceal actual file content",
+        "The files are classified as confidential under company policy"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "file_metadata"
+    },
+    {
+      "artifact_id": "ART-004",
+      "content": "Google Drive installed and logged in with iaman.informant.personal@gmail.com | Files uploaded to Google Drive and shared | Email sent: 'Login is below.' | CCleaner and Eraser installed afterwards",
+      "forensic_anomalies": [
+        "Use of personal Gmail account to exfiltrate corporate data",
+        "Installation of anti-forensic tools (CCleaner, Eraser) after exfiltration"
+      ],
+      "peirce_layer": "THIRDNESS",
+      "type": "bash_history"
+    },
+    {
+      "artifact_id": "ART-005",
+      "content": "Connection to network drive: \\\\10.11.11.128\\secured_drive | Directories traversed in search of files | Files copied from network to Desktop\\$ data | Network drive disconnected | Network drive IP: 10.11.11.128",
+      "forensic_anomalies": [
+        "Access to secured network drive followed by local file copy",
+        "Immediate disconnection after copying files indicates selective collection pattern"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "network_flow"
+    }
+  ],
+  "_consolidation": {
+    "consolidated_at": "2026-04-28T05:51:15.348802+00:00",
+    "parser_version": "1.0",
+    "schema_version": "1.0",
+    "source_file": "vigia_forensic_cases.json"
+  },
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}

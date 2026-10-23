@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.1",
+  "case_id": "VIGIA-REAL-009",
+  "verdict": "MALICE",
+  "confidence_threshold": 92,
+  "carnegie_pattern": "Data Theft Pattern",
+  "peirce_classification": {
+    "firstness": "Bash history shows copying of confidential files, compression, and transfer with Perl script",
+    "secondness": "Use of external proxy and download of privilege escalation exploit indicate deliberate preparation",
+    "thirdness": "Steve Vogon planned and executed confidential data exfiltration using privilege escalation, compression, and an external proxy to bypass security controls"
+  },
+  "mitre_ttps": [
+    "T1048",
+    "T1041",
+    "T1071",
+    "T1068",
+    "T1070"
+  ],
+  "key_iocs": [
+    {
+      "type": "file_path",
+      "value": "/mnt/hgfs/Admin_share/acct_prem.xls",
+      "context": "ART-001:bash_history"
+    },
+    {
+      "type": "file_path",
+      "value": "/mnt/hgfs/Admin_share/domain.xls",
+      "context": "ART-001:bash_history"
+    },
+    {
+      "type": "file_path",
+      "value": "/mnt/hgfs/Admin_share/ftp.pcap",
+      "context": "ART-001:bash_history"
+    },
+    {
+      "type": "ip_address",
+      "value": "219.93.175.67:80",
+      "context": "ART-002:bash_history"
+    },
+    {
+      "type": "url",
+      "value": "http://219.93.175.67:80",
+      "context": "ART-002:bash_history"
+    },
+    {
+      "type": "url",
+      "value": "http://metasploit.com/users/hdm/tools/xmodulepath.tgz",
+      "context": "ART-002:bash_history"
+    }
+  ],
+  "null_hypothesis": "Steve Vogon was performing a legitimate backup of work files and the proxy is the corporate standard",
+  "usability_tier": "build_and_test",
+  "scoring_notes": "DFRWS 2008 Linux. Memory + disk + network, all in-repo. VIGIA ground-truth file built from scratch by Anna Tchijova. Score with care — challenge solutions in academic literature.",
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}

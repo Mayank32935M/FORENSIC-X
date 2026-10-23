@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.1",
+  "case_id": "VIGIA-REAL-008",
+  "verdict": "MALICE",
+  "confidence_threshold": 93,
+  "carnegie_pattern": "Hidden Process Masquerading",
+  "peirce_classification": {
+    "firstness": "reader_sl.exe process hidden with network connections to external IPs in explorer.exe memory",
+    "secondness": "VAD strings contain list of targeted banks and web injection code; credentials appear in memory",
+    "thirdness": "Cridex is a banking trojan that uses process injection into explorer.exe to intercept banking traffic, inject fake web code, and exfiltrate credentials to C&C servers"
+  },
+  "mitre_ttps": [
+    "T1055",
+    "T1557",
+    "T1071.001",
+    "T1003"
+  ],
+  "key_iocs": [
+    {
+      "type": "ip_address",
+      "value": "125.19.103.198",
+      "context": "ART-002:memory_string"
+    },
+    {
+      "type": "ip_address",
+      "value": "188.40.0.138",
+      "context": "ART-002:memory_string"
+    },
+    {
+      "type": "ip_address",
+      "value": "190.81.107.70",
+      "context": "ART-002:memory_string"
+    },
+    {
+      "type": "ip_address",
+      "value": "210.56.23.100",
+      "context": "ART-002:memory_string"
+    },
+    {
+      "type": "ip_address",
+      "value": "211.44.250.173",
+      "context": "ART-002:memory_string"
+    },
+    {
+      "type": "ip_address",
+      "value": "41.168.5.140:8080",
+      "context": "ART-002:memory_string"
+    },
+    {
+      "type": "ip_address",
+      "value": "85.214.204.32",
+      "context": "ART-002:memory_string"
+    }
+  ],
+  "null_hypothesis": "reader_sl.exe is a legitimate Adobe Reader component and the network connections are software updates",
+  "usability_tier": "not_ready",
+  "scoring_notes": "Volatility Cridex. Canonical download DEAD (files.sempersecurus.org). Volatility repo archived read-only May 2025. DO NOT use for scoring. Hosting verified copy pending fiber install.",
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}
