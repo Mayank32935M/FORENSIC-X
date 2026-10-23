@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.1",
+  "case_id": "VIGIA-REAL-007",
+  "verdict": "MALICE",
+  "confidence_threshold": 91,
+  "carnegie_pattern": null,
+  "peirce_classification": {
+    "firstness": "Threatening emails sent from anonymous service with Gmail cookies exposed in HTTP traffic",
+    "secondness": "pcap analysis correlates internal IP 192.168.15.4 with Johnny Coach's jcoach@gmail.com account",
+    "thirdness": "Johnny Coach, a Chemistry 109 student, sent harassment emails to the professor using anonymous services and Gmail, identified through network traffic analysis"
+  },
+  "mitre_ttps": [
+    "T1566.001",
+    "T1585.001",
+    "T1071.001"
+  ],
+  "key_iocs": [
+    {
+      "type": "email",
+      "value": "jcoachj@gmail.com",
+      "context": "ART-002:email_header"
+    },
+    {
+      "type": "ip_address",
+      "value": "140.247.62.34",
+      "context": "ART-001:network_flow"
+    },
+    {
+      "type": "ip_address",
+      "value": "192.168.15.4",
+      "context": "ART-001:network_flow"
+    }
+  ],
+  "null_hypothesis": "The password-less WiFi network means anyone could have used the connection and Johnny Coach's email",
+  "usability_tier": "score_against",
+  "scoring_notes": "Nitroba. Strongest scoring case in set. All three pcap hashes confirmed matching live source. Use for precision/recall benchmark.",
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}

@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.1",
+  "case_id": "VIGIA-REAL-004",
+  "verdict": "MALICE",
+  "confidence_threshold": 92,
+  "carnegie_pattern": "Masquerading Legitimacy",
+  "peirce_classification": {
+    "firstness": "Executable downloaded with a SysInternals-like name that installs a fake VMware service",
+    "secondness": "The timeline shows a rapid infection sequence with hosts modification, secondary payload download, and evidence deletion",
+    "thirdness": "The attacker used masquerading (legitimate tool name) to deceive the user, install persistence via a fake service, and evade detection"
+  },
+  "mitre_ttps": [
+    "T1204.002",
+    "T1543.003",
+    "T1562.001",
+    "T1070.004",
+    "T1199"
+  ],
+  "key_iocs": [
+    {
+      "type": "file_hash",
+      "value": "72e6d1728a546c2f3ee32c063ed09fa6ba8c46ac33b0dd2e354087c1ad26ef48",
+      "context": "ART-001:file_metadata"
+    },
+    {
+      "type": "file_path",
+      "value": "C:\\Users\\Public\\Downloads\\SysInternals.exe",
+      "context": "ART-001:file_metadata"
+    },
+    {
+      "type": "file_path",
+      "value": "c:\\Windows\\",
+      "context": "ART-003:bash_history"
+    },
+    {
+      "type": "file_path",
+      "value": "c:\\Windows\\vmtoolsIO.exe",
+      "context": "ART-003:bash_history"
+    },
+    {
+      "type": "url",
+      "value": "http://www.malware430.com/html/VMwareUpdate.exe",
+      "context": "ART-002:timestamp"
+    }
+  ],
+  "null_hypothesis": "VMwareIOHelperService is a legitimate VMware Tools component that was automatically installed",
+  "usability_tier": "practice_only",
+  "scoring_notes": "Ali Hadi #7. Single E01. Answers instructor-gated. Practice only — do not use for accuracy scoring.",
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}

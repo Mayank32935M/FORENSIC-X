@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.1",
+  "vigia_schema": "1.0",
+  "case_id": "VIGIA-REAL-005",
+  "case_name": "Ali Hadi Encrypt Them All Case",
+  "description": "Jane has been using multiple encryption methods to conceal communication: an AES-encrypted README file in Documents, a BitLocker volume named R2D2, and a keys file in Downloads encrypted with GPG/PGP public/private key.",
+  "incident_type": "encryption_concealment",
+  "abstention_risk": "medium",
+  "usability_tier": "build_and_test",
+  "tier_note": "Soluciones disponibles pero con restricciones. Reportar si el agente razonó o recordó.",
+  "source": {
+    "dataset": "Ali Hadi Challenge #9 - Encrypt Them All Case",
+    "origin": "public_dataset",
+    "url": "https://www.binary-zone.com/2023/03/27/challenge-9-encrypt-them-all-case/"
+  },
+  "artifacts": [
+    {
+      "artifact_id": "ART-001",
+      "content": "README file in user's Documents directory | Status: Encrypted with AES | No password available | Possible unencrypted version in system cache | keys file in Downloads directory | Status: Encrypted with GPG/PGP Public/Private key",
+      "forensic_anomalies": [
+        "Use of AES encryption to conceal a communication file in Documents",
+        "Simultaneous use of asymmetric GPG encryption for another message"
+      ],
+      "peirce_layer": "FIRSTNESS",
+      "type": "file_metadata"
+    },
+    {
+      "artifact_id": "ART-002",
+      "content": "BitLocker volume: Name='R2D2' | Status: Full disk encryption active | Recovery key possibly stored in AD, USB, or backup file | Type: Full disk encryption",
+      "forensic_anomalies": [
+        "Volume with non-standard name (R2D2) instead of a descriptive label",
+        "BitLocker applied to a specific volume suggests intent to conceal content"
+      ],
+      "peirce_layer": "SECONDNESS",
+      "type": "file_metadata"
+    },
+    {
+      "artifact_id": "ART-003",
+      "content": "GPG/PGP keys in user profile | Asymmetric encrypted communication with unknown party | 'keys' file contains message to decrypt | Possible private key pairs recoverable from the image",
+      "forensic_anomalies": [
+        "Use of asymmetric encryption for secret communication indicates prior coordination",
+        "Multiple cryptographic methods applied suggest deliberate layers of protection"
+      ],
+      "peirce_layer": "THIRDNESS",
+      "type": "process_list"
+    }
+  ],
+  "_consolidation": {
+    "consolidated_at": "2026-04-28T05:51:15.348845+00:00",
+    "parser_version": "1.0",
+    "schema_version": "1.0",
+    "source_file": "vigia_forensic_cases.json"
+  },
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}

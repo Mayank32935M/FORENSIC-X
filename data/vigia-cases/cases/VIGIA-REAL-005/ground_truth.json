@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.1",
+  "case_id": "VIGIA-REAL-005",
+  "verdict": "SUSPICION",
+  "confidence_threshold": 88,
+  "carnegie_pattern": "Concealment",
+  "peirce_classification": {
+    "firstness": "Multiple files encrypted with different cryptographic methods (AES, BitLocker, GPG)",
+    "secondness": "The combination of encryption layers and the name R2D2 for the BitLocker volume indicate a systematic attempt to conceal information",
+    "thirdness": "Jane has been secretly communicating using multiple encryption methods to evade monitoring, possibly leaking confidential information"
+  },
+  "mitre_ttps": [
+    "T1027",
+    "T1486",
+    "T1565",
+    "T1564"
+  ],
+  "key_iocs": [],
+  "null_hypothesis": "Jane is a security professional applying good personal data protection practices and the company has no policy against encryption",
+  "usability_tier": "build_and_test",
+  "scoring_notes": "INTENTIONAL false-positive test. Expected verdict is SUSPICION, NOT MALICE. Agents that fire MALICE here fail the specificity gate.",
+  "_generated_at": "2026-05-29T22:16:20.145405+00:00"
+}
